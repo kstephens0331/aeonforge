@@ -408,6 +408,7 @@ test_config.yaml
 
 # Vercel
 .vercel
+!vercel.json
 
 # Railway
 .railway/
@@ -470,6 +471,7 @@ web_scraper_project/
 !*config.json
 !*schema.json
 !.vscode/*.json
+!vercel.json
 
 # Scraper logs
 scraper.log
