@@ -1,0 +1,137 @@
+/* Chat File Upload Styles */
+.chat-file-upload {
+  padding: 20px;
+  border-bottom: 1px solid #2d3748;
+  background: rgba(45, 55, 72, 0.2);
+}
+
+.selected-files-preview {
+  background: rgba(45, 55, 72, 0.3);
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.files-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(45, 55, 72, 0.5);
+  border-bottom: 1px solid #2d3748;
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+.clear-files-btn {
+  background: #e53e3e;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clear-files-btn:hover {
+  background: #c53030;
+}
+
+.files-preview-list {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.file-preview-item.more-files {
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.file-preview-item .file-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.file-preview-item .file-size {
+  color: #a0aec0;
+}
+
+.attach-button {
+  background: none;
+  border: 1px solid #4a5568;
+  color: #a0aec0;
+  padding: 10px 12px;
+  border-radius: 8px 0 0 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+}
+
+.attach-button:hover {
+  border-color: #3182ce;
+  color: #3182ce;
+  background: rgba(49, 130, 206, 0.1);
+}
+
+.attach-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Medical File Upload Styles */
+.medical-file-upload {
+  padding: 20px;
+  border-bottom: 1px solid #2d3748;
+  background: rgba(246, 173, 85, 0.05);
+  border-left: 4px solid #f6ad55;
+}
+
+/* Projects File Upload Styles */
+.project-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.project-file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(45, 55, 72, 0.3);
+  border-radius: 8px;
+  border: 1px solid #2d3748;
+}
+
+.project-file-item .file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.project-file-item .file-name {
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.project-file-item .file-meta {
+  font-size: 11px;
+  color: #a0aec0;
+}

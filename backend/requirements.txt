@@ -1,0 +1,18 @@
+# Backend API requirements
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# CORS support
+python-cors>=1.2.0
+
+# Existing Aeonforge dependencies
+pyautogen
+GitPython
+requests
+beautifulsoup4
+python-dotenv
+google-search-results
+reportlab
+PyPDF2

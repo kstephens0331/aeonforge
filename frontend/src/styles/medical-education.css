@@ -1,0 +1,493 @@
+/* Medical Education Styles */
+.medical-education {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #1a1f2e;
+}
+
+.education-tabs {
+  display: flex;
+  background: rgba(45, 55, 72, 0.5);
+  border-bottom: 1px solid #2d3748;
+  padding: 0 20px;
+  gap: 4px;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  padding: 16px 24px;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+}
+
+.tab-button:hover {
+  background: rgba(49, 130, 206, 0.1);
+  color: #63b3ed;
+}
+
+.tab-button.active {
+  background: #1a1f2e;
+  color: #ffffff;
+  border-bottom: 2px solid #3182ce;
+}
+
+.tab-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.education-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Upload Tab Styles */
+.upload-tab {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.upload-section h3 {
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.upload-section p {
+  color: #a0aec0;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.session-name-input {
+  margin-bottom: 24px;
+}
+
+.session-name-input label {
+  display: block;
+  color: #e2e8f0;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.session-name-input input {
+  width: 100%;
+  background: rgba(45, 55, 72, 0.5);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #ffffff;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.session-name-input input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.warning-text {
+  color: #f56565;
+  font-size: 12px;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* Study Tab Styles */
+.study-tab {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.content-library {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.content-card {
+  background: rgba(45, 55, 72, 0.3);
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.content-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.content-header h4 {
+  color: #ffffff;
+  margin: 0;
+  font-size: 18px;
+  flex: 1;
+}
+
+.content-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.study-btn {
+  background: #38a169;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.study-btn:hover {
+  background: #2f855a;
+}
+
+.study-btn:disabled {
+  background: #4a5568;
+  cursor: not-allowed;
+}
+
+.delete-btn {
+  background: #e53e3e;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: #c53030;
+}
+
+.content-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+.content-files {
+  margin-bottom: 12px;
+}
+
+.file-item-small {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.file-size {
+  color: #a0aec0;
+}
+
+.progress-summary {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #68d391;
+  font-weight: 500;
+}
+
+/* Quiz Tab Styles */
+.quiz-tab {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.quiz-interface {
+  background: rgba(45, 55, 72, 0.3);
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 16px;
+}
+
+.quiz-header {
+  background: rgba(45, 55, 72, 0.5);
+  padding: 20px;
+  border-bottom: 1px solid #2d3748;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quiz-header h3 {
+  color: #ffffff;
+  margin: 0;
+}
+
+.quiz-progress {
+  color: #a0aec0;
+  font-size: 14px;
+}
+
+.quiz-score {
+  color: #68d391;
+  font-weight: 600;
+}
+
+.question-card {
+  padding: 24px;
+}
+
+.question-text h4 {
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.question-text p {
+  color: #e2e8f0;
+  font-size: 18px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.answer-section textarea {
+  width: 100%;
+  background: rgba(45, 55, 72, 0.5);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  padding: 16px;
+  color: #ffffff;
+  font-size: 16px;
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.5;
+}
+
+.answer-section textarea:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.quiz-buttons {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.quiz-buttons button {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.quiz-buttons button:hover {
+  background: #2c5aa0;
+}
+
+.quiz-buttons button:disabled {
+  background: #4a5568;
+  cursor: not-allowed;
+}
+
+.answer-feedback {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.answer-feedback.correct {
+  background: rgba(56, 161, 105, 0.1);
+  border-color: #38a169;
+}
+
+.answer-feedback.incorrect {
+  background: rgba(245, 101, 101, 0.1);
+  border-color: #f56565;
+}
+
+.answer-feedback h5 {
+  margin: 0 0 8px 0;
+  color: #ffffff;
+}
+
+.answer-feedback p {
+  margin: 8px 0;
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+/* Results Tab Styles */
+.results-tab {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.recent-session {
+  background: rgba(56, 161, 105, 0.1);
+  border: 1px solid #38a169;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.recent-session h4 {
+  color: #68d391;
+  margin: 0 0 16px 0;
+  font-size: 24px;
+}
+
+.session-summary {
+  color: #e2e8f0;
+}
+
+.score-display {
+  font-size: 48px;
+  font-weight: bold;
+  color: #68d391;
+  margin-bottom: 16px;
+}
+
+.percentage {
+  font-size: 24px;
+  color: #a0aec0;
+  margin-left: 16px;
+}
+
+.progress-overview h4 {
+  color: #ffffff;
+  margin-bottom: 24px;
+}
+
+.progress-item {
+  background: rgba(45, 55, 72, 0.3);
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.progress-item h5 {
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.progress-stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #a0aec0;
+}
+
+.session-history {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.session-dot .dot {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.session-dot .dot.good {
+  background: #38a169;
+  color: white;
+}
+
+.session-dot .dot.needs-work {
+  background: #ed8936;
+  color: white;
+}
+
+/* Empty States */
+.empty-state, .no-quiz, .no-results {
+  text-align: center;
+  padding: 48px;
+  color: #a0aec0;
+}
+
+.empty-state button, .no-quiz button, .no-results button {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.empty-state button:hover, .no-quiz button:hover, .no-results button:hover {
+  background: #2c5aa0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .education-tabs {
+    flex-wrap: wrap;
+    padding: 0 12px;
+  }
+  
+  .tab-button {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+  
+  .education-content {
+    padding: 16px;
+  }
+  
+  .content-library {
+    grid-template-columns: 1fr;
+  }
+  
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .quiz-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .progress-stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

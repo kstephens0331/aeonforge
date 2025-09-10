@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aeonforge AI - Phase 7+ Complete System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: #171717;
+            border-right: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .phase-indicator {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .new-chat-btn {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            border: 1px solid #404040;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .new-chat-btn:hover {
+            background-color: #404040;
+            border-color: #555555;
+        }
+
+        .tab-switcher {
+            display: flex;
+            margin-bottom: 16px;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background-color: #404040;
+            color: #ffffff;
+        }
+
+        .tab:not(.active) {
+            color: #999999;
+        }
+
+        .tab:not(.active):hover {
+            color: #ffffff;
+            background-color: #333333;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+        }
+
+        .conversation-item, .project-item {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .conversation-item:hover, .project-item:hover {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        .conversation-item.active, .project-item.active {
+            background-color: #2d2d2d;
+            border-color: #667eea;
+        }
+
+        .conversation-title, .project-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-preview, .project-path {
+            font-size: 12px;
+            color: #999999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .project-action {
+            padding: 4px 8px;
+            background-color: #404040;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .project-action:hover {
+            background-color: #555555;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #0f0f0f;
+        }
+
+        .main-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .system-info {
+            font-size: 14px;
+            color: #cccccc;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            max-width: 90%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background-color: #667eea;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-text {
+            background-color: #2d2d2d;
+            padding: 16px 20px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-text {
+            background-color: #667eea;
+            border-radius: 16px 16px 4px 16px;
+        }
+
+        .message.assistant .message-text {
+            background-color: #2d2d2d;
+            border-radius: 16px 16px 16px 4px;
+        }
+
+        .message-meta {
+            font-size: 12px;
+            color: #999999;
+            margin-top: 8px;
+            padding: 0 4px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .typing-indicator.visible {
+            opacity: 1;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 16px 20px;
+            background-color: #2d2d2d;
+            border-radius: 16px 16px 16px 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #666666;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .input-container {
+            padding: 24px;
+            border-top: 1px solid #404040;
+        }
+
+        .input-wrapper {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 60px;
+            max-height: 200px;
+            background-color: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 16px;
+            padding: 16px 60px 16px 20px;
+            color: #ffffff;
+            font-size: 15px;
+            line-height: 1.4;
+            resize: none;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 1px #667eea;
+        }
+
+        .message-input::placeholder {
+            color: #999999;
+        }
+
+        .send-button {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .send-button:hover {
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: translateY(-50%) scale(1);
+            box-shadow: none;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: #cccccc;
+            margin-bottom: 32px;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background-color: #2d2d2d;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #404040;
+            text-align: left;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-description {
+            font-size: 14px;
+            color: #cccccc;
+            line-height: 1.4;
+        }
+
+        .project-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .project-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #10b981;
+        }
+
+        .project-status-text {
+            font-size: 11px;
+            color: #10b981;
+        }
+
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
+
+        .approval-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .approval-modal.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .approval-content {
+            background-color: #2d2d2d;
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid #404040;
+        }
+
+        .approval-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .approval-description {
+            font-size: 14px;
+            color: #cccccc;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .approval-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .approval-btn.approve {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .approval-btn.approve:hover {
+            background-color: #059669;
+        }
+
+        .approval-btn.reject {
+            background-color: #404040;
+            color: white;
+        }
+
+        .approval-btn.reject:hover {
+            background-color: #555555;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">A</div>
+                    <div class="logo-text">Aeonforge</div>
+                </div>
+                <div class="phase-indicator">Phase 7+ Complete System</div>
+                <button class="new-chat-btn" onclick="startNewChat()">
+                    <span>+</span> New Chat
+                </button>
+                <div class="tab-switcher">
+                    <div class="tab active" onclick="switchTab('conversations')">Chats</div>
+                    <div class="tab" onclick="switchTab('projects')">Projects</div>
+                </div>
+            </div>
+            <div class="sidebar-content">
+                <div id="conversations-tab" class="tab-content">
+                    <!-- Conversation history will be populated here -->
+                </div>
+                <div id="projects-tab" class="tab-content" style="display: none;">
+                    <!-- Active projects will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="main-header">
+                <div class="system-status">
+                    <div class="status-indicator"></div>
+                    <div class="system-info" id="system-info">
+                        All systems operational • Memory active • Projects ready
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-container" id="chat-container">
+                <div class="welcome-screen" id="welcome-screen">
+                    <h1 class="welcome-title">Aeonforge AI Development System</h1>
+                    <p class="welcome-subtitle">
+                        Your complete AI development assistant with persistent memory, project management, 
+                        and advanced workflow automation. Ready to help you build anything.
+                    </p>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">💭</div>
+                            <div class="feature-title">Persistent Memory</div>
+                            <div class="feature-description">Remembers every conversation and context across all sessions</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🏗️</div>
+                            <div class="feature-title">Project Management</div>
+                            <div class="feature-description">Isolated project contexts with custom instructions</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <div class="feature-title">Dynamic Responses</div>
+                            <div class="feature-description">ChatGPT-like functionality with no hardcoded outputs</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🔧</div>
+                            <div class="feature-title">Complete Toolchain</div>
+                            <div class="feature-description">7+ integrated phases for full-stack development</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="messages-container" style="display: none;"></div>
+
+                <div class="typing-indicator" id="typing-indicator">
+                    <div class="message-avatar" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">A</div>
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        class="message-input" 
+                        id="message-input" 
+                        placeholder="Ask me to create anything, analyze code, or help with your projects..."
+                        onkeydown="handleKeyPress(event)"
+                    ></textarea>
+                    <button class="send-button" id="send-button" onclick="sendMessage()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval Modal -->
+    <div class="approval-modal" id="approval-modal">
+        <div class="approval-content">
+            <div class="approval-title" id="approval-title">Project Approval Required</div>
+            <div class="approval-description" id="approval-description"></div>
+            <div class="approval-actions">
+                <button class="approval-btn reject" onclick="handleApproval(false)">Cancel</button>
+                <button class="approval-btn approve" onclick="handleApproval(true)">Approve & Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentConversationId = null;
+        let conversations = new Map();
+        let projects = new Map();
+        let pendingApproval = null;
+        let isTyping = false;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConversations();
+            loadProjects();
+            checkSystemStatus();
+            
+            // Auto-resize textarea
+            const messageInput = document.getElementById('message-input');
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab appearance
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tabName + '-tab').style.display = 'block';
+        }
+
+        // Start new chat
+        function startNewChat() {
+            currentConversationId = 'conv_' + Date.now();
+            conversations.set(currentConversationId, {
+                id: currentConversationId,
+                title: 'New Chat',
+                messages: [],
+                created: new Date().toISOString()
+            });
+            
+            // Show welcome screen
+            document.getElementById('welcome-screen').style.display = 'flex';
+            document.getElementById('messages-container').style.display = 'none';
+            
+            updateConversationsList();
+        }
+
+        // Load conversations from memory
+        function loadConversations() {
+            // This would typically load from the backend
+            // For now, we'll simulate with local data
+            const savedConversations = localStorage.getItem('aeonforge_conversations');
+            if (savedConversations) {
+                const convArray = JSON.parse(savedConversations);
+                convArray.forEach(conv => conversations.set(conv.id, conv));
+                updateConversationsList();
+            }
+        }
+
+        // Load projects from memory
+        function loadProjects() {
+            // Simulate loading projects
+            const sampleProjects = [
+                {
+                    id: 'proj_react_app',
+                    name: 'React Todo App',
+                    path: './react-todo-app',
+                    status: 'active',
+                    created: new Date(Date.now() - 86400000).toISOString()
+                },
+                {
+                    id: 'proj_python_api',
+                    name: 'FastAPI Backend',
+                    path: './fastapi-backend',
+                    status: 'active', 
+                    created: new Date(Date.now() - 172800000).toISOString()
+                }
+            ];
+            
+            sampleProjects.forEach(proj => projects.set(proj.id, proj));
+            updateProjectsList();
+        }
+
+        // Update conversations list
+        function updateConversationsList() {
+            const container = document.getElementById('conversations-tab');
+            container.innerHTML = '';
+            
+            Array.from(conversations.values())
+                .sort((a, b) => new Date(b.created) - new Date(a.created))
+                .forEach(conv => {
+                    const item = document.createElement('div');
+                    item.className = 'conversation-item' + (conv.id === currentConversationId ? ' active' : '');
+                    item.onclick = () => loadConversation(conv.id);
+                    
+                    const lastMessage = conv.messages.length > 0 ? 
+                        conv.messages[conv.messages.length - 1].content.substring(0, 60) + '...' : 
+                        'No messages yet';
+                    
+                    item.innerHTML = `
+                        <div class="conversation-title">${conv.title}</div>
+                        <div class="conversation-preview">${lastMessage}</div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+        }
+
+        // Update projects list
+        function updateProjectsList() {
+            const container = document.getElementById('projects-tab');
+            container.innerHTML = '';
+            
+            Array.from(projects.values())
+                .sort((a, b) => new Date(b.created) - new Date(a.created))
+                .forEach(proj => {
+                    const item = document.createElement('div');
+                    item.className = 'project-item';
+                    
+                    item.innerHTML = `
+                        <div class="project-title">${proj.name}</div>
+                        <div class="project-path">${proj.path}</div>
+                        <div class="project-status">
+                            <div class="project-status-dot"></div>
+                            <div class="project-status-text">${proj.status}</div>
+                        </div>
+                        <div class="project-actions">
+                            <div class="project-action">Open</div>
+                            <div class="project-action">Settings</div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+        }
+
+        // Load specific conversation
+        function loadConversation(conversationId) {
+            currentConversationId = conversationId;
+            const conversation = conversations.get(conversationId);
+            
+            if (conversation && conversation.messages.length > 0) {
+                document.getElementById('welcome-screen').style.display = 'none';
+                document.getElementById('messages-container').style.display = 'block';
+                
+                const container = document.getElementById('messages-container');
+                container.innerHTML = '';
+                
+                conversation.messages.forEach(message => {
+                    addMessageToUI(message.content, message.role);
+                });
+            } else {
+                document.getElementById('welcome-screen').style.display = 'flex';
+                document.getElementById('messages-container').style.display = 'none';
+            }
+            
+            updateConversationsList();
+        }
+
+        // Handle key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            // Clear input
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Create conversation if needed
+            if (!currentConversationId) {
+                startNewChat();
+            }
+            
+            // Hide welcome screen
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('messages-container').style.display = 'block';
+            
+            // Add user message
+            addMessageToUI(message, 'user');
+            
+            // Show typing indicator
+            showTyping();
+            
+            try {
+                // Send to backend
+                const response = await fetch('http://localhost:8000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_id: currentConversationId,
+                        api_keys: {}
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Hide typing indicator
+                hideTyping();
+                
+                if (data.needs_approval) {
+                    // Show approval modal
+                    showApprovalModal(data.approval_task, data.approval_details || data.message);
+                    pendingApproval = {
+                        conversation_id: currentConversationId,
+                        approval_id: data.approval_task
+                    };
+                } else {
+                    // Add assistant response
+                    addMessageToUI(data.message, 'assistant');
+                }
+                
+                // Update conversation
+                updateConversationInMemory(message, data.message);
+                
+            } catch (error) {
+                hideTyping();
+                addMessageToUI('Sorry, I encountered an error. Please try again.', 'assistant');
+                console.error('Error:', error);
+            }
+        }
+
+        // Add message to UI
+        function addMessageToUI(content, role) {
+            const container = document.getElementById('messages-container');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatarText = role === 'user' ? 'U' : 'A';
+            const timestamp = new Date().toLocaleTimeString();
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatarText}</div>
+                <div class="message-content">
+                    <div class="message-text">${content}</div>
+                    <div class="message-meta">${timestamp}</div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTyping() {
+            isTyping = true;
+            document.getElementById('typing-indicator').classList.add('visible');
+            document.getElementById('send-button').disabled = true;
+        }
+
+        // Hide typing indicator
+        function hideTyping() {
+            isTyping = false;
+            document.getElementById('typing-indicator').classList.remove('visible');
+            document.getElementById('send-button').disabled = false;
+        }
+
+        // Show approval modal
+        function showApprovalModal(title, description) {
+            document.getElementById('approval-title').textContent = title || 'Project Approval Required';
+            document.getElementById('approval-description').textContent = description;
+            document.getElementById('approval-modal').classList.add('visible');
+        }
+
+        // Hide approval modal
+        function hideApprovalModal() {
+            document.getElementById('approval-modal').classList.remove('visible');
+        }
+
+        // Handle approval response
+        async function handleApproval(approved) {
+            hideApprovalModal();
+            
+            if (!pendingApproval) return;
+            
+            if (approved) {
+                showTyping();
+                
+                try {
+                    const response = await fetch('http://localhost:8000/api/approval', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            approval_id: pendingApproval.approval_id,
+                            approved: true,
+                            conversation_id: pendingApproval.conversation_id
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    hideTyping();
+                    
+                    addMessageToUI(data.message, 'assistant');
+                    
+                } catch (error) {
+                    hideTyping();
+                    addMessageToUI('Error processing approval. Please try again.', 'assistant');
+                    console.error('Approval error:', error);
+                }
+            } else {
+                addMessageToUI('Request cancelled.', 'assistant');
+            }
+            
+            pendingApproval = null;
+        }
+
+        // Update conversation in memory
+        function updateConversationInMemory(userMessage, assistantMessage) {
+            if (!currentConversationId) return;
+            
+            const conversation = conversations.get(currentConversationId);
+            if (conversation) {
+                // Update title if it's the first message
+                if (conversation.messages.length === 0) {
+                    conversation.title = userMessage.substring(0, 30) + (userMessage.length > 30 ? '...' : '');
+                }
+                
+                conversation.messages.push(
+                    { role: 'user', content: userMessage, timestamp: new Date().toISOString() },
+                    { role: 'assistant', content: assistantMessage, timestamp: new Date().toISOString() }
+                );
+                
+                // Save to localStorage
+                localStorage.setItem('aeonforge_conversations', 
+                    JSON.stringify(Array.from(conversations.values())));
+                
+                updateConversationsList();
+            }
+        }
+
+        // Check system status
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/api/health');
+                const data = await response.json();
+                
+                document.getElementById('system-info').textContent = 
+                    `${data.status} • Memory: ${data.memory_active ? 'Active' : 'Inactive'} • Phase 7+ Complete`;
+                    
+            } catch (error) {
+                document.getElementById('system-info').textContent = 
+                    'System status: Checking connection...';
+            }
+        }
+        
+        // Check system status every 30 seconds
+        setInterval(checkSystemStatus, 30000);
+    </script>
+</body>
+</html>

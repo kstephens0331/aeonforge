@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aeonforge AI Development System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: #171717;
+            border-right: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .system-version {
+            background-color: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .new-chat-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .section-title {
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 20px 0 12px 0;
+        }
+
+        .conversation-item, .project-item {
+            padding: 12px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+
+        .conversation-item:hover, .project-item:hover {
+            background-color: #262626;
+        }
+
+        .conversation-item.active, .project-item.active {
+            background-color: #2563eb;
+        }
+
+        .conversation-title, .project-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-preview, .project-path {
+            color: #9ca3af;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #0f0f0f;
+        }
+
+        .main-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .current-context {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .context-indicator {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .global-context {
+            background-color: #374151;
+            color: #e5e7eb;
+        }
+
+        .project-context {
+            background-color: #059669;
+            color: white;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #10b981;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .assistant-avatar {
+            background-color: #059669;
+            color: white;
+        }
+
+        .message-content {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        .message-text {
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .message-meta {
+            margin-top: 8px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .approval-section {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .approval-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #f59e0b;
+        }
+
+        .approval-details {
+            margin-bottom: 16px;
+            color: #d1d5db;
+        }
+
+        .approval-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .approve-btn, .reject-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .approve-btn {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .reject-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .approve-btn:hover, .reject-btn:hover {
+            opacity: 0.8;
+        }
+
+        .input-area {
+            padding: 24px;
+            border-top: 1px solid #404040;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .input-container:focus-within {
+            border-color: #2563eb;
+        }
+
+        .message-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            max-height: 120px;
+        }
+
+        .message-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .send-button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .send-button:disabled {
+            background-color: #374151;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #9ca3af;
+            font-size: 14px;
+            padding: 16px 0;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 48px;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: #9ca3af;
+            margin-bottom: 32px;
+            max-width: 600px;
+        }
+
+        .capabilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+            max-width: 800px;
+        }
+
+        .capability-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+        }
+
+        .capability-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .capability-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .capability-desc {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .scroll-to-bottom {
+            position: absolute;
+            bottom: 100px;
+            right: 32px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .scroll-to-bottom.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scroll-to-bottom:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 240px;
+            }
+            
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid #404040;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">AF</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 16px;">Aeonforge AI</div>
+                        <div class="system-version">Phase 7+ Active</div>
+                    </div>
+                </div>
+                <button class="new-chat-btn" onclick="startNewChat()">
+                    <span>➕</span> New Chat
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="section-title">Recent Conversations</div>
+                <div id="conversation-list">
+                    <!-- Conversations will be loaded here -->
+                </div>
+
+                <div class="section-title">Active Projects</div>
+                <div id="project-list">
+                    <!-- Projects will be loaded here -->
+                </div>
+
+                <div class="section-title">System Status</div>
+                <div style="padding: 12px; background-color: #065f46; border-radius: 8px; margin-bottom: 8px;">
+                    <div style="font-weight: 500; color: #10b981; margin-bottom: 4px;">All Systems Operational</div>
+                    <div style="font-size: 12px; color: #6ee7b7;">
+                        • Memory System: Active<br>
+                        • Workflow Engine: Ready<br>
+                        • Dynamic Responses: Online<br>
+                        • Project Management: Ready
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="main-header">
+                <div class="current-context">
+                    <div id="context-indicator" class="context-indicator global-context">
+                        🌐 Global Context
+                    </div>
+                    <div style="font-size: 14px; color: #9ca3af;" id="context-details">
+                        Ready for any request - ChatGPT-like functionality
+                    </div>
+                </div>
+                <div class="system-status">
+                    <div class="status-dot"></div>
+                    <span>System Ready</span>
+                </div>
+            </div>
+
+            <div class="chat-area">
+                <div class="messages-container" id="messages-container">
+                    <div class="welcome-screen" id="welcome-screen">
+                        <div class="welcome-icon">🚀</div>
+                        <h1 class="welcome-title">Welcome to Aeonforge</h1>
+                        <p class="welcome-subtitle">
+                            Advanced AI Development System with complete memory, project management, and ChatGPT-like functionality.
+                            Start by asking me to create anything or managing your projects.
+                        </p>
+                        
+                        <div class="capabilities-grid">
+                            <div class="capability-card">
+                                <div class="capability-icon">🧠</div>
+                                <div class="capability-title">Complete Memory</div>
+                                <div class="capability-desc">Remembers every conversation and context across all sessions</div>
+                            </div>
+                            <div class="capability-card">
+                                <div class="capability-icon">📁</div>
+                                <div class="capability-title">Project Management</div>
+                                <div class="capability-desc">Isolated project contexts with specific instructions and templates</div>
+                            </div>
+                            <div class="capability-card">
+                                <div class="capability-icon">⚡</div>
+                                <div class="capability-title">Dynamic Responses</div>
+                                <div class="capability-desc">No hardcoded outputs - every response generated based on your request</div>
+                            </div>
+                            <div class="capability-card">
+                                <div class="capability-icon">🔗</div>
+                                <div class="capability-title">Workflow Automation</div>
+                                <div class="capability-desc">Advanced workflow engine with visual designer and triggers</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="scroll-to-bottom" id="scroll-to-bottom" onclick="scrollToBottom()">
+                    ↓
+                </button>
+
+                <div class="input-area">
+                    <div class="input-container">
+                        <textarea 
+                            class="message-input" 
+                            id="message-input" 
+                            placeholder="Ask me to create anything, manage projects, or chat about development..."
+                            rows="1"
+                            onkeydown="handleKeyPress(event)"
+                            oninput="autoResize(this)"
+                        ></textarea>
+                        <button class="send-button" id="send-button" onclick="sendMessage()">
+                            ↑
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversations = [];
+        let projects = [];
+        let currentConversationId = null;
+        let isTyping = false;
+
+        // Initialize the application
+        async function initApp() {
+            await loadConversations();
+            await loadProjects();
+            await checkSystemStatus();
+        }
+
+        // Load conversation history
+        async function loadConversations() {
+            try {
+                // Mock conversations for now - would load from memory system
+                conversations = [
+                    {
+                        id: 'conv_1',
+                        title: 'Web Scraper Project',
+                        preview: 'Created Python scraper with BeautifulSoup...',
+                        timestamp: new Date(Date.now() - 3600000)
+                    },
+                    {
+                        id: 'conv_2', 
+                        title: 'React Dashboard',
+                        preview: 'Built React dashboard with charts...',
+                        timestamp: new Date(Date.now() - 7200000)
+                    },
+                    {
+                        id: 'conv_3',
+                        title: 'API Integration',
+                        preview: 'FastAPI backend with authentication...',
+                        timestamp: new Date(Date.now() - 86400000)
+                    }
+                ];
+                renderConversations();
+            } catch (error) {
+                console.error('Failed to load conversations:', error);
+            }
+        }
+
+        // Load project list
+        async function loadProjects() {
+            try {
+                // Mock projects for now - would load from project manager
+                projects = [
+                    {
+                        id: 'proj_1',
+                        name: 'E-commerce Platform',
+                        path: './ecommerce-app',
+                        status: 'active'
+                    },
+                    {
+                        id: 'proj_2',
+                        name: 'Data Analysis Tool', 
+                        path: './data-analyzer',
+                        status: 'active'
+                    },
+                    {
+                        id: 'proj_3',
+                        name: 'Mobile App Backend',
+                        path: './mobile-api',
+                        status: 'inactive'
+                    }
+                ];
+                renderProjects();
+            } catch (error) {
+                console.error('Failed to load projects:', error);
+            }
+        }
+
+        // Render conversation list
+        function renderConversations() {
+            const container = document.getElementById('conversation-list');
+            container.innerHTML = conversations.map(conv => `
+                <div class="conversation-item" onclick="switchConversation('${conv.id}')">
+                    <div class="conversation-title">${conv.title}</div>
+                    <div class="conversation-preview">${conv.preview}</div>
+                </div>
+            `).join('');
+        }
+
+        // Render project list
+        function renderProjects() {
+            const container = document.getElementById('project-list');
+            container.innerHTML = projects.map(proj => `
+                <div class="project-item ${proj.status}" onclick="switchProject('${proj.id}')">
+                    <div class="project-name">${proj.name}</div>
+                    <div class="project-path">${proj.path}</div>
+                </div>
+            `).join('');
+        }
+
+        // Start new chat
+        function startNewChat() {
+            currentConversationId = `conv_${Date.now()}`;
+            clearMessages();
+            showWelcomeScreen();
+            updateContextIndicator('🌐 Global Context', 'Ready for any request - ChatGPT-like functionality');
+        }
+
+        // Switch conversation
+        function switchConversation(conversationId) {
+            currentConversationId = conversationId;
+            clearMessages();
+            hideWelcomeScreen();
+            // Load conversation messages here
+            updateContextIndicator('💬 Conversation', `Loaded conversation: ${conversations.find(c => c.id === conversationId)?.title}`);
+        }
+
+        // Switch project
+        function switchProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+                updateContextIndicator('📁 Project Context', `Active project: ${project.name}`);
+                // Switch to project context in backend
+                switchToProjectContext(projectId);
+            }
+        }
+
+        // Update context indicator
+        function updateContextIndicator(context, details) {
+            const indicator = document.getElementById('context-indicator');
+            const detailsEl = document.getElementById('context-details');
+            
+            indicator.textContent = context;
+            detailsEl.textContent = details;
+            
+            if (context.includes('Project')) {
+                indicator.className = 'context-indicator project-context';
+            } else {
+                indicator.className = 'context-indicator global-context';
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            hideWelcomeScreen();
+            addMessage('user', message);
+            input.value = '';
+            autoResize(input);
+            
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        api_keys: {},
+                        conversation_id: currentConversationId || `conv_${Date.now()}`
+                    })
+                });
+                
+                const data = await response.json();
+                hideTypingIndicator();
+                
+                addMessage('assistant', data.message, {
+                    agent: data.agent,
+                    needsApproval: data.needs_approval,
+                    approvalTask: data.approval_task,
+                    approvalDetails: data.approval_details
+                });
+                
+                // Save conversation if new
+                if (!currentConversationId) {
+                    currentConversationId = `conv_${Date.now()}`;
+                    conversations.unshift({
+                        id: currentConversationId,
+                        title: message.length > 30 ? message.substring(0, 30) + '...' : message,
+                        preview: data.message.length > 50 ? data.message.substring(0, 50) + '...' : data.message,
+                        timestamp: new Date()
+                    });
+                    renderConversations();
+                }
+                
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('assistant', 'Sorry, I encountered an error. Please make sure the backend server is running on http://localhost:8000', {
+                    agent: 'system',
+                    error: true
+                });
+            }
+        }
+
+        // Add message to chat
+        function addMessage(sender, content, metadata = {}) {
+            const container = document.getElementById('messages-container');
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message';
+            
+            const avatarClass = sender === 'user' ? 'user-avatar' : 'assistant-avatar';
+            const avatarText = sender === 'user' ? 'U' : 'A';
+            
+            let approvalSection = '';
+            if (metadata.needsApproval) {
+                approvalSection = `
+                    <div class="approval-section">
+                        <div class="approval-title">🎯 Approval Required</div>
+                        <div class="approval-details">
+                            <strong>Task:</strong> ${metadata.approvalTask}<br>
+                            <strong>Details:</strong> ${metadata.approvalDetails}
+                        </div>
+                        <div class="approval-buttons">
+                            <button class="approve-btn" onclick="handleApproval(true, '${currentConversationId}')">
+                                ✅ Approve & Execute
+                            </button>
+                            <button class="reject-btn" onclick="handleApproval(false, '${currentConversationId}')">
+                                ❌ Cancel
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            messageEl.innerHTML = `
+                <div class="message-avatar ${avatarClass}">${avatarText}</div>
+                <div class="message-content">
+                    <div class="message-text">${content.replace(/\n/g, '<br>')}</div>
+                    ${approvalSection}
+                    <div class="message-meta">
+                        ${metadata.agent ? `Agent: ${metadata.agent} • ` : ''}
+                        ${new Date().toLocaleTimeString()}
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(messageEl);
+            scrollToBottom();
+        }
+
+        // Handle approval
+        async function handleApproval(approved, conversationId) {
+            try {
+                const response = await fetch('http://localhost:8000/api/approval', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        approval_id: 'approval_' + Date.now(),
+                        approved: approved,
+                        conversation_id: conversationId
+                    })
+                });
+                
+                const data = await response.json();
+                addMessage('assistant', data.message, {
+                    agent: data.agent
+                });
+                
+            } catch (error) {
+                addMessage('assistant', 'Error processing approval: ' + error.message, {
+                    agent: 'system',
+                    error: true
+                });
+            }
+        }
+
+        // Show/hide typing indicator
+        function showTypingIndicator() {
+            isTyping = true;
+            const container = document.getElementById('messages-container');
+            const typingEl = document.createElement('div');
+            typingEl.id = 'typing-indicator';
+            typingEl.className = 'typing-indicator';
+            typingEl.innerHTML = `
+                <div class="message-avatar assistant-avatar">A</div>
+                <div>
+                    Aeonforge is thinking
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(typingEl);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            isTyping = false;
+            const typingEl = document.getElementById('typing-indicator');
+            if (typingEl) {
+                typingEl.remove();
+            }
+        }
+
+        // Utility functions
+        function showWelcomeScreen() {
+            document.getElementById('welcome-screen').style.display = 'flex';
+        }
+
+        function hideWelcomeScreen() {
+            document.getElementById('welcome-screen').style.display = 'none';
+        }
+
+        function clearMessages() {
+            document.getElementById('messages-container').innerHTML = '';
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('messages-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/api/health');
+                const data = await response.json();
+                console.log('System status:', data);
+            } catch (error) {
+                console.warn('Backend not available:', error);
+            }
+        }
+
+        async function switchToProjectContext(projectId) {
+            try {
+                // Would call memory system to switch project context
+                console.log('Switching to project:', projectId);
+            } catch (error) {
+                console.error('Failed to switch project context:', error);
+            }
+        }
+
+        // Initialize app on load
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

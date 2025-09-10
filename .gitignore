@@ -1,0 +1,607 @@
+# ========================================
+# Aeonforge Production .gitignore
+# Comprehensive security and cleanup
+# ========================================
+
+# ========================================
+# CRITICAL SECURITY - API KEYS & SECRETS
+# ========================================
+
+# Environment files
+.env
+.env.*
+!.env.example
+.envrc
+
+# API Keys and secrets
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+api_keys/
+credentials/
+
+# Configuration files with potential secrets
+config.json
+config.yaml
+config.yml
+settings.json
+local_settings.py
+
+# Database credentials
+database.url
+db_config.json
+
+# Cloud provider configs
+.aws/
+.gcp/
+.azure/
+
+# ========================================
+# PYTHON & VIRTUAL ENVIRONMENTS
+# ========================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+Scripts/
+pyvenv.cfg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ========================================
+# NODE.JS & FRONTEND
+# ========================================
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Snowpack dependency directory
+web_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Frontend build
+frontend/dist/
+frontend/build/
+
+# ========================================
+# DATABASES
+# ========================================
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# PostgreSQL
+*.dump
+*.sql.bak
+
+# MySQL
+*.sql
+
+# MongoDB
+*.bson
+
+# Redis dumps
+dump.rdb
+
+# Database backups
+*.backup
+*.bak
+
+# ========================================
+# LOGS & MONITORING
+# ========================================
+
+# Application logs
+logs/
+*.log
+*.log.*
+
+# System health checks
+system_health_checks/logs/
+system_health_checks/inspection_results/
+system_health_checks/*.json
+!system_health_checks/README.md
+
+# Monitoring data
+monitoring/
+metrics/
+alerts/
+
+# Performance data
+*.prof
+*.profile
+
+# Debug files
+debug/
+*.debug
+
+# ========================================
+# TEMPORARY & CACHE FILES
+# ========================================
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Cache directories
+.cache/
+cache/
+.sass-cache/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Editor temporary files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+nul
+
+# ========================================
+# BUILD & DEPLOYMENT
+# ========================================
+
+# Build outputs
+build/
+dist/
+out/
+target/
+bin/
+obj/
+
+# Deployment files with secrets
+docker-compose.override.yml
+docker-compose.production.yml
+k8s-secrets.yaml
+helm-values.yaml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# ========================================
+# DEVELOPMENT & TESTING
+# ========================================
+
+# Test outputs
+test_output/
+test_results/
+coverage_reports/
+
+# Benchmarking
+benchmark_results/
+performance_data/
+
+# Development databases
+dev.db
+test.db
+local.db
+
+# Development configurations
+local_config.json
+dev_settings.py
+test_config.yaml
+
+# ========================================
+# CLOUD SERVICES & DEPLOYMENT
+# ========================================
+
+# Vercel
+.vercel
+
+# Railway
+.railway/
+
+# Heroku
+.heroku/
+
+# Netlify
+.netlify/
+
+# Supabase (local development)
+supabase/.temp/
+supabase/logs/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# ========================================
+# PROJECT SPECIFIC - AEONFORGE
+# ========================================
+
+# Aeonforge specific temporary files
+aeonforge_temp/
+tool_outputs/
+generated_files/
+user_uploads/
+
+# AI model files (if cached locally)
+models/
+*.model
+*.weights
+*.checkpoint
+
+# Large data files
+*.csv.bak
+*.json.large
+data_dumps/
+
+# User-specific tool configurations
+user_tools/
+custom_configs/
+
+# Backup system files
+backups/
+*.backup.json
+
+# Demo and test projects
+demo_scaffold_project/
+web_scraper_project/
+
+# Large CSV and JSON files
+*.csv
+*.json
+!package.json
+!tsconfig.json
+!requirements*.json
+!*config.json
+!*schema.json
+!.vscode/*.json
+
+# Scraper logs
+scraper.log
+
+# Runtime files
+*.pid
+*.seed
+
+# Testing
+coverage/
+.coverage
+.pytest_cache/
+
+# ========================================
+# MEDIA & ASSETS
+# ========================================
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+
+# Audio files
+*.mp3
+*.wav
+*.flac
+*.aac
+
+# Large images (keep small ones for UI)
+*.psd
+*.ai
+*.sketch
+uploads/
+media/large/
+
+# ========================================
+# DOCUMENTATION BUILD FILES
+# ========================================
+
+# Documentation build outputs
+docs/build/
+docs/dist/
+_site/
+.jekyll-cache/
+.bundle/
+
+# Markdown temporary files
+*.md~
+*.md.bak
+
+# ========================================
+# SECURITY SCANNING RESULTS
+# ========================================
+
+# Security scan results
+security_reports/
+vulnerability_scans/
+.snyk
+.semgrep.yml
+
+# Dependency check results
+dependency-check-report.html
+.audit-ci.json
+
+# ========================================
+# MISCELLANEOUS
+# ========================================
+
+# Package manager lock files (optional, uncomment if needed)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Editor workspace files
+*.code-workspace
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.template.json
+
+# System files
+.fseventsd
+.Spotlight-V100
+.Trashes
+
+# Network settings
+.network
+
+# Custom scripts with sensitive data
+scripts/deploy_prod.sh
+scripts/setup_secrets.sh
+scripts/*_private.py
+
+# ========================================
+# WHITELIST IMPORTANT FILES
+# (These should NOT be ignored)
+# ========================================
+
+# Always include these important files
+!README.md
+!LICENSE
+!CONTRIBUTING.md
+!requirements.txt
+!package.json
+!.env.example
+!.gitignore
+!.github/
+!deployment/
+!docs/
+!system_health_checks/README.md
+
+# Include important config templates
+!config.template.json
+!settings.example.py
+!docker-compose.example.yml
+
+# ========================================
+# FINAL SECURITY CHECK
+# ========================================
+
+# Ensure no common secret patterns slip through
+*secret*
+*password*
+*token*
+*credential*
+*private*
+
+# But allow these safe files
+!*secret*.example
+!*secret*.template
+!*secret*.md
+!password_requirements.md
+!token_documentation.md
