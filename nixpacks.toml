@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["python311", "python311Packages.pip"]
+
+[phases.install]
+cmd = "pip install -r api/requirements.txt"
+
+[phases.build]
+cmd = "echo 'No build step needed'"
+
+[start]
+cmd = "cd api && python -m uvicorn main_hybrid:app --host 0.0.0.0 --port $PORT"
