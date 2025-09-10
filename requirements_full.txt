@@ -1,0 +1,27 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+asyncpg==0.29.0
+sqlalchemy==2.0.25
+alembic==1.13.1
+psycopg2-binary==2.9.9
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+
+# Phase 8 Database Dependencies
+redis==5.0.1
+chromadb==0.4.18
+
+# Phase 9 Payment Dependencies
+stripe==7.8.0
+
+# Phase 10 AI Analytics Dependencies
+numpy==1.25.2
+anthropic==0.3.11
+openai==1.3.7
+
+# Additional Enterprise Dependencies
+httpx==0.25.2
+aiofiles==23.2.1
