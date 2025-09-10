@@ -8,4 +8,4 @@ cmd = "pip install -r api/requirements.txt"
 cmd = "echo 'No build step needed'"
 
 [start]
-cmd = "cd api && python -m uvicorn main_hybrid:app --host 0.0.0.0 --port $PORT"
+cmd = "chmod +x start.sh && ./start.sh"

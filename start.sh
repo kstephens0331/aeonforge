@@ -1,0 +1,2 @@
+#!/bin/bash
+cd api && python -m uvicorn main_hybrid:app --host 0.0.0.0 --port $PORT
