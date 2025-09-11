@@ -52,12 +52,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize SQLite Database
+# Memory allocation limits by plan (in MB)
+MEMORY_LIMITS = {
+    'free': 512,        # 0.5 GB
+    'standard': 1024,   # 1 GB  
+    'pro': 1536,        # 1.5 GB
+    'enterprise': 2048  # 2 GB
+}
+
+# Initialize Enhanced Database
 def init_db():
-    """Initialize user database"""
-    conn = sqlite3.connect('users.db')
+    """Initialize comprehensive database with all required tables"""
+    conn = sqlite3.connect('aeonforge.db')
     cursor = conn.cursor()
     
+    # Users table with enhanced fields
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +77,115 @@ def init_db():
         daily_usage INTEGER DEFAULT 0,
         usage_reset_date TEXT DEFAULT CURRENT_DATE,
         stripe_customer_id TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        memory_used INTEGER DEFAULT 0,
+        memory_limit INTEGER DEFAULT 512,
+        organization_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+    
+    # Organizations table for enterprise accounts
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS organizations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        plan TEXT DEFAULT 'enterprise',
+        admin_user_id INTEGER,
+        total_memory_limit INTEGER DEFAULT 2048,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_user_id) REFERENCES users (id)
+    )
+    ''')
+    
+    # Conversations table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS conversations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        model TEXT DEFAULT 'gpt-3.5-turbo',
+        memory_size INTEGER DEFAULT 0,
+        is_archived BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+    
+    # Chat messages table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        conversation_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        model_used TEXT,
+        tokens_used INTEGER DEFAULT 0,
+        memory_size INTEGER DEFAULT 0,
+        saved_to_memory BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (conversation_id) REFERENCES conversations (id),
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+    
+    # User memory/knowledge base
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS user_memory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        key_name TEXT NOT NULL,
+        content TEXT NOT NULL,
+        category TEXT DEFAULT 'general',
+        memory_size INTEGER DEFAULT 0,
+        importance_score INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+    
+    # Project history table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS projects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        status TEXT DEFAULT 'active',
+        memory_size INTEGER DEFAULT 0,
+        metadata TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+    
+    # Search history table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS search_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        query TEXT NOT NULL,
+        results_count INTEGER DEFAULT 0,
+        memory_size INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+    
+    # Memory tracking for quota management
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS memory_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        table_name TEXT NOT NULL,
+        record_id INTEGER NOT NULL,
+        memory_size INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
     )
     ''')
     
@@ -107,7 +224,7 @@ def verify_jwt_token(token: str) -> Dict[str, Any]:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 def get_current_user(authorization: str = Header(None)):
-    """Get current user from JWT token"""
+    """Get current user from JWT token with enhanced fields"""
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header required")
     
@@ -116,7 +233,7 @@ def get_current_user(authorization: str = Header(None)):
         payload = verify_jwt_token(token)
         
         # Get user from database
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect('aeonforge.db')
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE id = ?", (payload['user_id'],))
         user_row = cursor.fetchone()
@@ -131,7 +248,10 @@ def get_current_user(authorization: str = Header(None)):
             'name': user_row[3],
             'plan': user_row[4],
             'daily_usage': user_row[5],
-            'usage_reset_date': user_row[6]
+            'usage_reset_date': user_row[6],
+            'memory_used': user_row[8],
+            'memory_limit': user_row[9],
+            'organization_id': user_row[10]
         }
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid authentication")
@@ -161,9 +281,77 @@ def check_usage_limits(user: dict) -> bool:
 
 def increment_usage(user_id: int):
     """Increment user's daily usage count"""
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect('aeonforge.db')
     cursor = conn.cursor()
     cursor.execute("UPDATE users SET daily_usage = daily_usage + 1 WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+# Memory Management Functions
+def calculate_memory_size(content: str) -> int:
+    """Calculate memory size in bytes for content"""
+    return len(content.encode('utf-8'))
+
+def check_memory_limits(user: dict, additional_memory: int = 0) -> bool:
+    """Check if user has available memory"""
+    current_memory = user.get('memory_used', 0)
+    memory_limit = user.get('memory_limit', MEMORY_LIMITS.get(user['plan'], 512))
+    return (current_memory + additional_memory) <= (memory_limit * 1024 * 1024)  # Convert MB to bytes
+
+def update_user_memory_usage(user_id: int, memory_change: int):
+    """Update user's memory usage"""
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET memory_used = memory_used + ? WHERE id = ?", (memory_change, user_id))
+    conn.commit()
+    conn.close()
+
+def save_chat_message(conversation_id: int, user_id: int, role: str, content: str, 
+                      model_used: str = None, save_to_memory: bool = True):
+    """Save chat message with memory tracking"""
+    memory_size = calculate_memory_size(content) if save_to_memory else 0
+    
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO chat_messages 
+        (conversation_id, user_id, role, content, model_used, memory_size, saved_to_memory)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (conversation_id, user_id, role, content, model_used, memory_size, save_to_memory))
+    
+    if save_to_memory:
+        update_user_memory_usage(user_id, memory_size)
+    
+    conn.commit()
+    conn.close()
+
+def save_to_user_memory(user_id: int, key_name: str, content: str, category: str = "general"):
+    """Save information to user's memory/knowledge base"""
+    memory_size = calculate_memory_size(content)
+    
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    
+    # Check if key already exists, update or insert
+    cursor.execute("SELECT id, memory_size FROM user_memory WHERE user_id = ? AND key_name = ?", (user_id, key_name))
+    existing = cursor.fetchone()
+    
+    if existing:
+        old_memory_size = existing[1]
+        cursor.execute('''
+            UPDATE user_memory 
+            SET content = ?, memory_size = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (content, memory_size, existing[0]))
+        update_user_memory_usage(user_id, memory_size - old_memory_size)
+    else:
+        cursor.execute('''
+            INSERT INTO user_memory (user_id, key_name, content, category, memory_size)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_id, key_name, content, category, memory_size))
+        update_user_memory_usage(user_id, memory_size)
+    
     conn.commit()
     conn.close()
 
@@ -172,6 +360,16 @@ class ChatRequest(BaseModel):
     message: str
     model: Optional[str] = None
     conversation_id: Optional[str] = None
+    save_to_memory: Optional[bool] = True
+
+class MemoryRequest(BaseModel):
+    key_name: str
+    content: str
+    category: Optional[str] = "general"
+
+class MemoryUpdateRequest(BaseModel):
+    key_name: str
+    new_content: str
 
 class SearchRequest(BaseModel):
     query: str
@@ -188,6 +386,10 @@ class SignupRequest(BaseModel):
 class CheckoutRequest(BaseModel):
     priceId: str
     plan: str
+
+class ConversationRequest(BaseModel):
+    title: str
+    model: Optional[str] = "gpt-3.5-turbo"
 
 # AI Model Helper Functions
 async def call_openai(message: str, model: str) -> str:
@@ -300,7 +502,7 @@ async def available_models():
 @app.post("/auth/login")
 async def login(request: LoginRequest):
     """User login endpoint"""
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect('aeonforge.db')
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE email = ?", (request.email,))
     user_row = cursor.fetchone()
@@ -318,14 +520,16 @@ async def login(request: LoginRequest):
             "email": user_row[1],
             "name": user_row[3],
             "plan": user_row[4],
-            "dailyUsage": user_row[5]
+            "dailyUsage": user_row[5],
+            "memoryUsed": user_row[8],
+            "memoryLimit": user_row[9]
         }
     }
 
 @app.post("/auth/signup")
 async def signup(request: SignupRequest):
-    """User signup endpoint"""
-    conn = sqlite3.connect('users.db')
+    """User signup endpoint with memory allocation"""
+    conn = sqlite3.connect('aeonforge.db')
     cursor = conn.cursor()
     
     # Check if user already exists
@@ -334,11 +538,14 @@ async def signup(request: SignupRequest):
         conn.close()
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create new user
+    # Create new user with memory limit based on plan
     hashed_password = hash_password(request.password)
+    plan = "free"
+    memory_limit = MEMORY_LIMITS[plan] * 1024 * 1024  # Convert MB to bytes
+    
     cursor.execute(
-        "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
-        (request.email, hashed_password, request.name)
+        "INSERT INTO users (email, password, name, plan, memory_limit) VALUES (?, ?, ?, ?, ?)",
+        (request.email, hashed_password, request.name, plan, memory_limit)
     )
     user_id = cursor.lastrowid
     conn.commit()
@@ -352,8 +559,10 @@ async def signup(request: SignupRequest):
             "id": user_id,
             "email": request.email,
             "name": request.name,
-            "plan": "free",
-            "dailyUsage": 0
+            "plan": plan,
+            "dailyUsage": 0,
+            "memoryUsed": 0,
+            "memoryLimit": memory_limit
         }
     }
 
@@ -394,15 +603,52 @@ async def create_checkout(request: CheckoutRequest, current_user: dict = Depends
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Payment error: {str(e)}")
 
+def parse_memory_commands(message: str) -> tuple[str, dict]:
+    """Parse special memory commands from user message"""
+    message_lower = message.lower().strip()
+    
+    if message_lower.startswith("don't save") or message_lower.startswith("do not save"):
+        return message, {"save_to_memory": False, "command": "no_save"}
+    
+    if message_lower.startswith("update memory"):
+        # Extract key and value: "update memory for name to John Doe"
+        if " for " in message_lower and " to " in message_lower:
+            parts = message_lower.split(" for ", 1)[1].split(" to ", 1)
+            if len(parts) == 2:
+                key_name = parts[0].strip()
+                new_value = parts[1].strip()
+                return message, {"save_to_memory": True, "command": "update_memory", "key": key_name, "value": new_value}
+    
+    if message_lower.startswith("remember") or message_lower.startswith("save to memory"):
+        # Extract key and value: "remember my name is John"
+        return message, {"save_to_memory": True, "command": "save_memory"}
+    
+    return message, {"save_to_memory": True, "command": None}
+
 @app.post("/chat")
 async def chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
-    """Secure chat endpoint with usage limits and smart model routing"""
+    """Enhanced chat endpoint with memory management and special commands"""
     if not OPENAI_API_KEY and not ANTHROPIC_API_KEY and not GOOGLE_API_KEY:
         raise HTTPException(status_code=503, detail="No AI models configured")
     
     # Check usage limits for free users
     if not check_usage_limits(current_user):
         raise HTTPException(status_code=429, detail="Daily usage limit exceeded. Upgrade to continue.")
+    
+    # Parse memory commands
+    processed_message, memory_config = parse_memory_commands(request.message)
+    save_to_memory = memory_config.get("save_to_memory", request.save_to_memory)
+    
+    # Handle special memory commands
+    if memory_config.get("command") == "update_memory":
+        save_to_user_memory(current_user['id'], memory_config['key'], memory_config['value'])
+        return {
+            "response": f"✅ Updated memory: {memory_config['key']} = {memory_config['value']}",
+            "model_used": "memory-system",
+            "conversation_id": request.conversation_id or "new-conversation",
+            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
+            "memory_updated": True
+        }
     
     model = request.model or DEFAULT_MODEL
     
@@ -414,44 +660,66 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
         if model.startswith("gemini-"):
             model = "gpt-4"  # Fallback to GPT-4 for standard users
     
+    # Check memory limits if saving to memory
+    if save_to_memory:
+        message_memory_size = calculate_memory_size(processed_message)
+        if not check_memory_limits(current_user, message_memory_size):
+            save_to_memory = False
+            memory_warning = " (Not saved to memory - limit exceeded)"
+        else:
+            memory_warning = ""
+    else:
+        memory_warning = " (Not saved to memory as requested)"
+    
     try:
         # Smart routing to appropriate AI service based on model
         if model.startswith("gpt-") and OPENAI_API_KEY:
-            response_text = await call_openai(request.message, model)
+            response_text = await call_openai(processed_message, model)
         elif model.startswith("claude-") and ANTHROPIC_API_KEY:
-            response_text = await call_anthropic(request.message, model)
+            response_text = await call_anthropic(processed_message, model)
         elif model.startswith("gemini-") and GOOGLE_API_KEY:
-            response_text = await call_google_gemini(request.message, model)
+            response_text = await call_google_gemini(processed_message, model)
         else:
             # Intelligent fallback to best available model
             if GOOGLE_API_KEY:
-                response_text = await call_google_gemini(request.message, "gemini-1.5-flash")
+                response_text = await call_google_gemini(processed_message, "gemini-1.5-flash")
                 model = "gemini-1.5-flash"
             elif OPENAI_API_KEY:
-                response_text = await call_openai(request.message, "gpt-3.5-turbo")
+                response_text = await call_openai(processed_message, "gpt-3.5-turbo")
                 model = "gpt-3.5-turbo"
             elif ANTHROPIC_API_KEY:
-                response_text = await call_anthropic(request.message, "claude-3-haiku")
+                response_text = await call_anthropic(processed_message, "claude-3-haiku")
                 model = "claude-3-haiku"
             else:
                 raise HTTPException(status_code=503, detail="No AI models available")
+        
+        # Save chat messages to database if conversation_id provided
+        if request.conversation_id and request.conversation_id != "new-conversation":
+            try:
+                conv_id = int(request.conversation_id)
+                save_chat_message(conv_id, current_user['id'], "user", processed_message, model, save_to_memory)
+                save_chat_message(conv_id, current_user['id'], "assistant", response_text, model, save_to_memory)
+            except ValueError:
+                pass  # Invalid conversation_id format
         
         # Increment usage for free and standard users
         if current_user['plan'] in ['free', 'standard']:
             increment_usage(current_user['id'])
         
         return {
-            "response": response_text,
+            "response": response_text + memory_warning,
             "model_used": model,
             "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z"
+            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
+            "saved_to_memory": save_to_memory,
+            "memory_command": memory_config.get("command")
         }
     except Exception as e:
         # Graceful fallback with error handling
-        fallback_response = f"AI response using {model}: {request.message}"
+        fallback_response = f"AI response using {model}: {processed_message}"
         if "gemini" in model.lower() and OPENAI_API_KEY:
             try:
-                fallback_response = await call_openai(request.message, "gpt-3.5-turbo")
+                fallback_response = await call_openai(processed_message, "gpt-3.5-turbo")
                 model = "gpt-3.5-turbo-fallback"
             except:
                 pass
@@ -461,17 +729,200 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
             increment_usage(current_user['id'])
         
         return {
-            "response": fallback_response,
+            "response": fallback_response + memory_warning,
             "model_used": model,
             "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z"
+            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
+            "saved_to_memory": save_to_memory,
+            "memory_command": memory_config.get("command")
         }
 
+# Memory and Chat Management Endpoints
+@app.post("/conversations")
+async def create_conversation(request: ConversationRequest, current_user: dict = Depends(get_current_user)):
+    """Create a new conversation"""
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO conversations (user_id, title, model)
+        VALUES (?, ?, ?)
+    ''', (current_user['id'], request.title, request.model))
+    
+    conversation_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return {
+        "conversation_id": conversation_id,
+        "title": request.title,
+        "model": request.model,
+        "created_at": datetime.now(datetime.timezone.utc).isoformat()
+    }
+
+@app.get("/conversations")
+async def get_conversations(current_user: dict = Depends(get_current_user)):
+    """Get user's conversation history"""
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT id, title, model, memory_size, created_at, updated_at
+        FROM conversations 
+        WHERE user_id = ? AND is_archived = FALSE
+        ORDER BY updated_at DESC
+    ''', (current_user['id'],))
+    
+    conversations = []
+    for row in cursor.fetchall():
+        conversations.append({
+            "id": row[0],
+            "title": row[1],
+            "model": row[2],
+            "memory_size": row[3],
+            "created_at": row[4],
+            "updated_at": row[5]
+        })
+    
+    conn.close()
+    return {"conversations": conversations}
+
+@app.get("/conversations/{conversation_id}/messages")
+async def get_conversation_messages(conversation_id: int, current_user: dict = Depends(get_current_user)):
+    """Get messages from a specific conversation"""
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    
+    # Verify user owns this conversation
+    cursor.execute("SELECT user_id FROM conversations WHERE id = ?", (conversation_id,))
+    conv_owner = cursor.fetchone()
+    if not conv_owner or conv_owner[0] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    cursor.execute('''
+        SELECT role, content, model_used, saved_to_memory, created_at
+        FROM chat_messages 
+        WHERE conversation_id = ?
+        ORDER BY created_at ASC
+    ''', (conversation_id,))
+    
+    messages = []
+    for row in cursor.fetchall():
+        messages.append({
+            "role": row[0],
+            "content": row[1],
+            "model_used": row[2],
+            "saved_to_memory": row[3],
+            "created_at": row[4]
+        })
+    
+    conn.close()
+    return {"messages": messages}
+
+@app.post("/memory")
+async def save_memory(request: MemoryRequest, current_user: dict = Depends(get_current_user)):
+    """Save information to user's memory"""
+    memory_size = calculate_memory_size(request.content)
+    
+    if not check_memory_limits(current_user, memory_size):
+        raise HTTPException(status_code=413, detail="Memory limit exceeded")
+    
+    save_to_user_memory(current_user['id'], request.key_name, request.content, request.category)
+    
+    return {
+        "message": f"Saved to memory: {request.key_name}",
+        "memory_size": memory_size,
+        "category": request.category
+    }
+
+@app.put("/memory/{key_name}")
+async def update_memory(key_name: str, request: MemoryUpdateRequest, current_user: dict = Depends(get_current_user)):
+    """Update memory entry"""
+    save_to_user_memory(current_user['id'], key_name, request.new_content)
+    return {"message": f"Updated memory: {key_name}"}
+
+@app.get("/memory")
+async def get_memory(current_user: dict = Depends(get_current_user)):
+    """Get user's memory/knowledge base"""
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT key_name, content, category, memory_size, created_at, updated_at
+        FROM user_memory
+        WHERE user_id = ?
+        ORDER BY updated_at DESC
+    ''', (current_user['id'],))
+    
+    memory_items = []
+    for row in cursor.fetchall():
+        memory_items.append({
+            "key_name": row[0],
+            "content": row[1],
+            "category": row[2],
+            "memory_size": row[3],
+            "created_at": row[4],
+            "updated_at": row[5]
+        })
+    
+    conn.close()
+    return {"memory": memory_items}
+
+@app.delete("/memory/{key_name}")
+async def delete_memory(key_name: str, current_user: dict = Depends(get_current_user)):
+    """Delete memory entry"""
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    
+    # Get memory size before deletion
+    cursor.execute("SELECT memory_size FROM user_memory WHERE user_id = ? AND key_name = ?", 
+                   (current_user['id'], key_name))
+    result = cursor.fetchone()
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Memory item not found")
+    
+    memory_size = result[0]
+    
+    # Delete the memory item
+    cursor.execute("DELETE FROM user_memory WHERE user_id = ? AND key_name = ?", 
+                   (current_user['id'], key_name))
+    
+    # Update user's memory usage
+    update_user_memory_usage(current_user['id'], -memory_size)
+    
+    conn.commit()
+    conn.close()
+    
+    return {"message": f"Deleted memory: {key_name}"}
+
+@app.get("/memory/usage")
+async def get_memory_usage(current_user: dict = Depends(get_current_user)):
+    """Get user's memory usage statistics"""
+    return {
+        "memory_used": current_user.get('memory_used', 0),
+        "memory_limit": current_user.get('memory_limit', 0),
+        "memory_available": current_user.get('memory_limit', 0) - current_user.get('memory_used', 0),
+        "usage_percentage": (current_user.get('memory_used', 0) / current_user.get('memory_limit', 1)) * 100,
+        "plan": current_user['plan']
+    }
+
 @app.post("/search")
-async def search(request: SearchRequest):
+async def search(request: SearchRequest, current_user: dict = Depends(get_current_user)):
     """Secure search endpoint using server-side SERPAPI key"""
     if not SERPAPI_KEY:
         raise HTTPException(status_code=503, detail="Search not configured")
+    
+    # Save search to history
+    memory_size = calculate_memory_size(request.query)
+    conn = sqlite3.connect('aeonforge.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO search_history (user_id, query, memory_size)
+        VALUES (?, ?, ?)
+    ''', (current_user['id'], request.query, memory_size))
+    conn.commit()
+    conn.close()
     
     # Mock search response
     return {
@@ -479,7 +930,8 @@ async def search(request: SearchRequest):
         "results": [
             {"title": f"Search result for: {request.query}", "url": "https://example.com"}
         ],
-        "search_engine": "SerpAPI"
+        "search_engine": "SerpAPI",
+        "saved_to_history": True
     }
 
 if __name__ == "__main__":
