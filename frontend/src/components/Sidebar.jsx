@@ -146,7 +146,25 @@ function Sidebar({
               <div className="feature-item">
                 <span className="feature-label">AI Chat</span>
                 <span className="feature-status-icon">
-                  {serverInfo.features?.openai_available || serverInfo.features?.anthropic_available ? '✅' : '❌'}
+                  {serverInfo.features?.openai_available || serverInfo.features?.anthropic_available || serverInfo.features?.google_available ? '✅' : '❌'}
+                </span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-label">OpenAI</span>
+                <span className="feature-status-icon">
+                  {serverInfo.features?.openai_available ? '✅' : '❌'}
+                </span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-label">Anthropic</span>
+                <span className="feature-status-icon">
+                  {serverInfo.features?.anthropic_available ? '✅' : '❌'}
+                </span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-label">Google</span>
+                <span className="feature-status-icon">
+                  {serverInfo.features?.google_available ? '✅' : '❌'}
                 </span>
               </div>
               <div className="feature-item">

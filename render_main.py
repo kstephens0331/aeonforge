@@ -14,6 +14,7 @@ from typing import Optional
 # Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY") 
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SERPAPI_KEY = os.getenv("SERPAPI_KEY")
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gpt-3.5-turbo")
 
@@ -82,6 +83,35 @@ async def call_anthropic(message: str, model: str) -> str:
         data = response.json()
         return data["content"][0]["text"]
 
+async def call_google_gemini(message: str, model: str) -> str:
+    """Call Google Gemini API"""
+    async with httpx.AsyncClient() as client:
+        # Google AI Studio API endpoint
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        response = await client.post(
+            url,
+            headers={
+                "Content-Type": "application/json"
+            },
+            params={
+                "key": GOOGLE_API_KEY
+            },
+            json={
+                "contents": [{
+                    "parts": [{
+                        "text": message
+                    }]
+                }],
+                "generationConfig": {
+                    "maxOutputTokens": 1000,
+                    "temperature": 0.7
+                }
+            },
+            timeout=30.0
+        )
+        data = response.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+
 @app.get("/")
 async def root():
     return {
@@ -92,6 +122,7 @@ async def root():
         "features": {
             "openai_available": bool(OPENAI_API_KEY),
             "anthropic_available": bool(ANTHROPIC_API_KEY),
+            "google_available": bool(GOOGLE_API_KEY),
             "search_available": bool(SERPAPI_KEY),
             "default_model": DEFAULT_MODEL
         }
@@ -109,6 +140,8 @@ async def available_models():
         models.extend(["gpt-4", "gpt-3.5-turbo"])
     if ANTHROPIC_API_KEY:
         models.extend(["claude-3-sonnet", "claude-3-haiku"])
+    if GOOGLE_API_KEY:
+        models.extend(["gemini-1.5-pro", "gemini-1.5-flash"])
     
     return {
         "available_models": models,
@@ -118,21 +151,26 @@ async def available_models():
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    """Secure chat endpoint - API keys handled server-side only"""
-    if not OPENAI_API_KEY and not ANTHROPIC_API_KEY:
+    """Secure chat endpoint with smart model routing - API keys handled server-side only"""
+    if not OPENAI_API_KEY and not ANTHROPIC_API_KEY and not GOOGLE_API_KEY:
         raise HTTPException(status_code=503, detail="No AI models configured")
     
     model = request.model or DEFAULT_MODEL
     
     try:
-        # Route to appropriate AI service based on model
+        # Smart routing to appropriate AI service based on model
         if model.startswith("gpt-") and OPENAI_API_KEY:
             response_text = await call_openai(request.message, model)
         elif model.startswith("claude-") and ANTHROPIC_API_KEY:
             response_text = await call_anthropic(request.message, model)
+        elif model.startswith("gemini-") and GOOGLE_API_KEY:
+            response_text = await call_google_gemini(request.message, model)
         else:
-            # Fallback to available model
-            if OPENAI_API_KEY:
+            # Intelligent fallback to best available model
+            if GOOGLE_API_KEY:
+                response_text = await call_google_gemini(request.message, "gemini-1.5-flash")
+                model = "gemini-1.5-flash"
+            elif OPENAI_API_KEY:
                 response_text = await call_openai(request.message, "gpt-3.5-turbo")
                 model = "gpt-3.5-turbo"
             elif ANTHROPIC_API_KEY:
@@ -148,8 +186,17 @@ async def chat(request: ChatRequest):
             "timestamp": "2025-01-01T00:00:00Z"
         }
     except Exception as e:
+        # Graceful fallback with error handling
+        fallback_response = f"AI response using {model}: {request.message}"
+        if "gemini" in model.lower() and OPENAI_API_KEY:
+            try:
+                fallback_response = await call_openai(request.message, "gpt-3.5-turbo")
+                model = "gpt-3.5-turbo-fallback"
+            except:
+                pass
+        
         return {
-            "response": f"AI response using {model}: {request.message}",
+            "response": fallback_response,
             "model_used": model,
             "conversation_id": request.conversation_id or "new-conversation",
             "timestamp": "2025-01-01T00:00:00Z"
