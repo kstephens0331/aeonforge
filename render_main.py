@@ -38,12 +38,17 @@ app = FastAPI(
     description="Multi-Agent AI System with secure server-side API keys"
 )
 
-# Add CORS
+# Add CORS - Allow both local and production frontends
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://aeonforge.vercel.app",
+        "https://aeonforge-git-main-kstephens0331.vercel.app",
+        "https://aeonforge-kstephens0331.vercel.app"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
