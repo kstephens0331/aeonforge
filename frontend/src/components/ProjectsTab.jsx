@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import FileUpload from './FileUpload'
 
-function ProjectsTab({ apiKeys }) {
+function ProjectsTab({ serverInfo }) {
   const [projects, setProjects] = useState([])
   const [selectedProject, setSelectedProject] = useState(null)
   const [showNewProjectForm, setShowNewProjectForm] = useState(false)
@@ -100,9 +100,10 @@ function ProjectsTab({ apiKeys }) {
       
       formData.append('message', message)
       formData.append('conversation_id', `project_${project.id}`)
-      formData.append('api_keys', JSON.stringify(apiKeys))
+      formData.append('model', serverInfo.default_model || 'gpt-3.5-turbo')
 
-      const response = await axios.post('http://localhost:8000/api/chat', formData, {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      const response = await axios.post(`${apiUrl}/chat`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

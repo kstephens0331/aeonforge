@@ -8,10 +8,9 @@ function Sidebar({
   onNewChat, 
   onSelectChat, 
   onDeleteChat,
-  apiKeys,
-  onApiKeyChange 
+  serverInfo
 }) {
-  const [showApiKeys, setShowApiKeys] = useState(false)
+  const [showServerInfo, setShowServerInfo] = useState(false)
 
   const formatChatTitle = (chat) => {
     if (chat.messages.length > 1) {
@@ -113,37 +112,46 @@ function Sidebar({
         </div>
       )}
 
-      {/* API Keys Section */}
+      {/* Server Info Section */}
       <div className="api-section">
         <button 
           className="api-toggle"
-          onClick={() => setShowApiKeys(!showApiKeys)}
+          onClick={() => setShowServerInfo(!showServerInfo)}
         >
-          <span className="nav-icon">🔑</span>
-          API Keys
-          <span className={`arrow ${showApiKeys ? 'up' : 'down'}`}>▼</span>
+          <span className="nav-icon">⚙️</span>
+          Server Info
+          <span className={`arrow ${showServerInfo ? 'up' : 'down'}`}>▼</span>
         </button>
         
-        {showApiKeys && (
+        {showServerInfo && (
           <div className="api-keys">
-            <div className="api-key-group">
-              <label>SerpAPI Key</label>
-              <input
-                type="password"
-                value={apiKeys.serpapi}
-                onChange={(e) => onApiKeyChange('serpapi', e.target.value)}
-                placeholder="Web search & research"
-              />
+            <div className="server-info-group">
+              <label>Available Models: {serverInfo.models?.length || 0}</label>
+              <div className="model-list">
+                {serverInfo.models?.map(model => (
+                  <div key={model} className="model-item">{model}</div>
+                )) || <div className="model-item">Loading...</div>}
+              </div>
             </div>
             
-            <div className="api-key-group">
-              <label>NIH/PubMed Key</label>
-              <input
-                type="password"
-                value={apiKeys.nih}
-                onChange={(e) => onApiKeyChange('nih', e.target.value)}
-                placeholder="Medical research access"
-              />
+            <div className="server-info-group">
+              <label>Default Model</label>
+              <div className="model-item">{serverInfo.default_model || 'gpt-3.5-turbo'}</div>
+            </div>
+            
+            <div className="server-info-group">
+              <label>Features</label>
+              <div className="feature-list">
+                <div className="feature-item">
+                  OpenAI: {serverInfo.features?.openai_available ? '✅' : '❌'}
+                </div>
+                <div className="feature-item">
+                  Anthropic: {serverInfo.features?.anthropic_available ? '✅' : '❌'}
+                </div>
+                <div className="feature-item">
+                  Search: {serverInfo.features?.search_available ? '✅' : '❌'}
+                </div>
+              </div>
             </div>
           </div>
         )}

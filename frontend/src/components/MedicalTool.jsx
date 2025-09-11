@@ -4,7 +4,7 @@ import FileUpload from './FileUpload'
 import MedicalEducation from './MedicalEducation'
 import '../styles/fileupload.css'
 
-function MedicalTool({ apiKeys }) {
+function MedicalTool({ serverInfo }) {
   const [activeMode, setActiveMode] = useState('research')
   const [query, setQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -111,10 +111,11 @@ function MedicalTool({ apiKeys }) {
       
       formData.append('mode', activeMode)
       formData.append('query', searchQuery)
-      formData.append('apiKeys', JSON.stringify(apiKeys))
+      formData.append('model', serverInfo.default_model || 'gpt-3.5-turbo')
 
-      // Simulate medical research - in real implementation, this would call specialized medical APIs
-      const response = await axios.post('http://localhost:8000/api/medical-search', formData, {
+      // Use secure medical search endpoint
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      const response = await axios.post(`${apiUrl}/search`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -150,9 +151,9 @@ function MedicalTool({ apiKeys }) {
         
         fallbackFormData.append('message', fallbackMessage)
         fallbackFormData.append('conversation_id', `medical_${Date.now()}`)
-        fallbackFormData.append('api_keys', JSON.stringify(apiKeys))
+        fallbackFormData.append('model', serverInfo.default_model || 'gpt-3.5-turbo')
 
-        const fallbackResponse = await axios.post('http://localhost:8000/api/chat', fallbackFormData, {
+        const fallbackResponse = await axios.post(`${apiUrl}/chat`, fallbackFormData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -341,10 +342,10 @@ function MedicalTool({ apiKeys }) {
             <span className="current-mode">
               {modes[activeMode].icon} {modes[activeMode].title} Mode
             </span>
-            {apiKeys.nih ? (
-              <span className="api-status connected">🟢 NIH/PubMed Connected</span>
+            {serverInfo.features?.search_available ? (
+              <span className="api-status connected">🟢 Medical Search Available</span>
             ) : (
-              <span className="api-status disconnected">🔴 NIH/PubMed API Key Required</span>
+              <span className="api-status disconnected">🔴 Medical Search Unavailable</span>
             )}
           </div>
         </div>
@@ -353,7 +354,7 @@ function MedicalTool({ apiKeys }) {
       <div className="medical-content">
         {/* Education Mode - Special Component */}
         {activeMode === 'education' ? (
-          <MedicalEducation apiKeys={apiKeys} />
+          <MedicalEducation serverInfo={serverInfo} />
         ) : (
           <div className="medical-results">
           {isLoading && (

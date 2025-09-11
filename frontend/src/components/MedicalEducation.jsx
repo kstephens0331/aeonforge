@@ -4,7 +4,7 @@ import FileUpload from './FileUpload'
 import '../styles/fileupload.css'
 import '../styles/medical-education.css'
 
-function MedicalEducation({ apiKeys }) {
+function MedicalEducation({ serverInfo }) {
   const [activeTab, setActiveTab] = useState('upload')
   const [uploadedContent, setUploadedContent] = useState([])
   const [studySessions, setStudySessions] = useState([])
@@ -89,7 +89,7 @@ Generate questions that help reinforce the key concepts from this specific conte
       const formData = new FormData()
       formData.append('content_name', content.name)
       formData.append('content_id', content.id.toString())
-      formData.append('api_keys', JSON.stringify(apiKeys))
+      formData.append('model', serverInfo.default_model || 'gpt-3.5-turbo')
       
       // Add files to form data
       content.files.forEach((fileObj, index) => {
@@ -97,7 +97,8 @@ Generate questions that help reinforce the key concepts from this specific conte
       })
       formData.append('file_count', content.files.length.toString())
 
-      const response = await axios.post('http://localhost:8000/api/medical-education-questions', formData, {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      const response = await axios.post(`${apiUrl}/chat`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

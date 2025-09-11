@@ -12,18 +12,40 @@ function App() {
   const [activeTab, setActiveTab] = useState('chat')
   const [chats, setChats] = useState([])
   const [currentChatId, setCurrentChatId] = useState(null)
-  const [apiKeys, setApiKeys] = useState({
-    serpapi: '',
-    nih: '',
-    pubmed: ''
+  // API keys are now handled server-side only for security
+  const [serverInfo, setServerInfo] = useState({
+    models: [],
+    features: {},
+    default_model: 'gpt-3.5-turbo'
   })
 
-  // Initialize with first chat
+  // Initialize with first chat and fetch server capabilities
   useEffect(() => {
     if (chats.length === 0) {
       createNewChat()
     }
+    fetchServerInfo()
   }, [])
+
+  const fetchServerInfo = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      
+      // Fetch server capabilities
+      const [statusResponse, modelsResponse] = await Promise.all([
+        axios.get(`${apiUrl}/`),
+        axios.get(`${apiUrl}/models`).catch(() => ({ data: { available_models: [] } }))
+      ])
+      
+      setServerInfo({
+        models: modelsResponse.data.available_models || [],
+        features: statusResponse.data.features || {},
+        default_model: statusResponse.data.features?.default_model || 'gpt-3.5-turbo'
+      })
+    } catch (error) {
+      console.warn('Could not fetch server info:', error)
+    }
+  }
 
   const createNewChat = () => {
     const now = Date.now()
@@ -73,9 +95,6 @@ function App() {
     }
   }
 
-  const handleApiKeyChange = (key, value) => {
-    setApiKeys(prev => ({ ...prev, [key]: value }))
-  }
 
   return (
     <div className="app-container">
@@ -87,8 +106,7 @@ function App() {
         onNewChat={createNewChat}
         onSelectChat={selectChat}
         onDeleteChat={deleteChat}
-        apiKeys={apiKeys}
-        onApiKeyChange={handleApiKeyChange}
+        serverInfo={serverInfo}
       />
 
       <div className="main-content">
@@ -96,16 +114,16 @@ function App() {
           <ChatInterface
             currentChat={getCurrentChat()}
             onUpdateChat={updateCurrentChat}
-            apiKeys={apiKeys}
+            serverInfo={serverInfo}
           />
         )}
         
         {activeTab === 'projects' && (
-          <ProjectsTab apiKeys={apiKeys} />
+          <ProjectsTab serverInfo={serverInfo} />
         )}
         
         {activeTab === 'medical' && (
-          <MedicalTool apiKeys={apiKeys} />
+          <MedicalTool serverInfo={serverInfo} />
         )}
       </div>
     </div>

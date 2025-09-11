@@ -3,7 +3,7 @@ import axios from 'axios'
 import FileUpload from './FileUpload'
 import '../styles/fileupload.css'
 
-function ChatInterface({ currentChat, onUpdateChat, apiKeys }) {
+function ChatInterface({ currentChat, onUpdateChat, serverInfo }) {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [pendingApproval, setPendingApproval] = useState(null)
@@ -56,45 +56,24 @@ function ChatInterface({ currentChat, onUpdateChat, apiKeys }) {
 
     try {
       const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-      let response
       
-      if (selectedFiles.length > 0) {
-        // Use FormData for file uploads
-        const formData = new FormData()
-        formData.append('message', inputMessage.trim())
-        formData.append('conversation_id', currentChat.id || 'main')
-        formData.append('api_keys', JSON.stringify(apiKeys || {}))
-        
-        // Add files to form data
-        selectedFiles.forEach((fileObj, index) => {
-          formData.append(`file_${index}`, fileObj.file)
-        })
-        formData.append('file_count', selectedFiles.length.toString())
-
-        response = await axios.post(`${apiUrl}/api/chat`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-      } else {
-        // Use regular JSON for text-only messages
-        response = await axios.post(`${apiUrl}/api/chat-working`, {
-          message: inputMessage.trim(),
-          conversation_id: currentChat.id || 'main',
-          api_keys: apiKeys || {}
-        }, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-      }
+      // Use the new secure /chat endpoint - no API keys needed on frontend
+      const response = await axios.post(`${apiUrl}/chat`, {
+        message: inputMessage.trim(),
+        conversation_id: currentChat.id || 'main',
+        model: serverInfo.default_model || 'gpt-3.5-turbo'
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
 
       const botMessage = {
         id: baseId + 1,
         type: 'agent',
-        content: response.data.message,
-        agent: response.data.agent,
-        timestamp: new Date().toISOString()
+        content: response.data.response,
+        agent: response.data.model_used,
+        timestamp: response.data.timestamp || new Date().toISOString()
       }
 
       const finalMessages = [...updatedMessages, botMessage]
