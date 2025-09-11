@@ -174,6 +174,12 @@ function Sidebar({
                 </span>
               </div>
               <div className="feature-item">
+                <span className="feature-label">NIH/PubMed</span>
+                <span className="feature-status-icon">
+                  {serverInfo.features?.nih_available ? '✅' : '❌'}
+                </span>
+              </div>
+              <div className="feature-item">
                 <span className="feature-label">File Upload</span>
                 <span className="feature-status-icon">✅</span>
               </div>

@@ -16,6 +16,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY") 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SERPAPI_KEY = os.getenv("SERPAPI_KEY")
+NIH_API_KEY = os.getenv("NIH_API_KEY") or os.getenv("NIHPubMed_Key")  # Support both names
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gpt-3.5-turbo")
 
 # Create FastAPI app
@@ -124,6 +125,7 @@ async def root():
             "anthropic_available": bool(ANTHROPIC_API_KEY),
             "google_available": bool(GOOGLE_API_KEY),
             "search_available": bool(SERPAPI_KEY),
+            "nih_available": bool(NIH_API_KEY),
             "default_model": DEFAULT_MODEL
         }
     }
