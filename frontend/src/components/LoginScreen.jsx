@@ -46,8 +46,11 @@ function LoginScreen({ onLogin, onSignup }) {
     <div className="login-screen">
       <div className="login-container">
         <div className="login-header">
-          <h1>🚀 AeonForge</h1>
-          <p>AI Development Platform</p>
+          <div className="logo-container">
+            <div className="logo-icon">⟲</div>
+            <h1>AeonForge</h1>
+          </div>
+          <p>Stop Settling. Start Forging the Future.</p>
         </div>
 
         <div className="login-tabs">

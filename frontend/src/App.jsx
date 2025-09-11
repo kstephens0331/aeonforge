@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import './index.css'
 import './sidebar-enhancements.css'
+import './styles/brand.css'
 
 // Import components
 import Sidebar from './components/Sidebar'
