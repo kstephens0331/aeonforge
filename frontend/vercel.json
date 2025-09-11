@@ -15,6 +15,6 @@
     }
   ],
   "env": {
-    "VITE_API_BASE_URL": "https://backend-production-9820c.up.railway.app"
+    "VITE_API_BASE_URL": "https://aeonforge.onrender.com"
   }
 }
