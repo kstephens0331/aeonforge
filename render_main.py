@@ -17,6 +17,14 @@ from typing import Optional, Dict, Any
 import sqlite3
 import json
 
+# Database imports - PostgreSQL support
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    POSTGRES_AVAILABLE = True
+except ImportError:
+    POSTGRES_AVAILABLE = False
+
 # Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY") 
@@ -26,6 +34,10 @@ NIH_API_KEY = os.getenv("NIH_API_KEY") or os.getenv("NIHPubMed_Key")  # Support 
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gpt-3.5-turbo")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 JWT_SECRET = os.getenv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production")
+
+# Database configuration
+DATABASE_URL = os.getenv("DATABASE_URL")  # PostgreSQL URL from Render
+USE_POSTGRES = bool(DATABASE_URL and POSTGRES_AVAILABLE)
 
 # Configure Stripe
 if STRIPE_SECRET_KEY:
@@ -60,30 +72,81 @@ MEMORY_LIMITS = {
     'enterprise': 2048  # 2 GB
 }
 
+# Database connection manager
+def get_db_connection():
+    """Get database connection - PostgreSQL in production, SQLite locally"""
+    if USE_POSTGRES:
+        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    else:
+        conn = sqlite3.connect('aeonforge.db')
+        conn.row_factory = sqlite3.Row  # Enable column access by name
+        return conn
+
+def execute_sql(query: str, params=None, fetch_one=False, fetch_all=False):
+    """Execute SQL query with automatic connection handling"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        
+        if fetch_one:
+            result = cursor.fetchone()
+        elif fetch_all:
+            result = cursor.fetchall()
+        else:
+            result = cursor.lastrowid if USE_POSTGRES else cursor.lastrowid
+        
+        conn.commit()
+        return result
+    finally:
+        conn.close()
+
 # Initialize Enhanced Database
 def init_db():
     """Initialize comprehensive database with all required tables"""
-    conn = sqlite3.connect('aeonforge.db')
-    cursor = conn.cursor()
+    # SQL schemas for both SQLite and PostgreSQL
+    if USE_POSTGRES:
+        user_table_sql = '''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            plan VARCHAR(50) DEFAULT 'free',
+            daily_usage INTEGER DEFAULT 0,
+            usage_reset_date DATE DEFAULT CURRENT_DATE,
+            stripe_customer_id VARCHAR(255),
+            memory_used BIGINT DEFAULT 0,
+            memory_limit BIGINT DEFAULT 536870912,
+            organization_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        '''
+    else:
+        user_table_sql = '''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            name TEXT NOT NULL,
+            plan TEXT DEFAULT 'free',
+            daily_usage INTEGER DEFAULT 0,
+            usage_reset_date TEXT DEFAULT CURRENT_DATE,
+            stripe_customer_id TEXT,
+            memory_used INTEGER DEFAULT 0,
+            memory_limit INTEGER DEFAULT 536870912,
+            organization_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        '''
     
-    # Users table with enhanced fields
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        name TEXT NOT NULL,
-        plan TEXT DEFAULT 'free',
-        daily_usage INTEGER DEFAULT 0,
-        usage_reset_date TEXT DEFAULT CURRENT_DATE,
-        stripe_customer_id TEXT,
-        memory_used INTEGER DEFAULT 0,
-        memory_limit INTEGER DEFAULT 512,
-        organization_id INTEGER,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
+    execute_sql(user_table_sql)
     
     # Organizations table for enterprise accounts
     cursor.execute('''
