@@ -89,7 +89,7 @@
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: #ffffff;
+  background: #ffffff;\n  color: #1f2937;
   box-sizing: border-box;
 }
 
@@ -204,4 +204,22 @@
   .premium-info {
     padding: 15px;
   }
+}
+
+.form-group input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.form-group input::-webkit-input-placeholder {
+  color: #64748b;
+}
+
+.form-group input::-moz-placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.form-group input:-ms-input-placeholder {
+  color: #64748b;
 }
