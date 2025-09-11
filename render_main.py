@@ -87,7 +87,7 @@ def create_jwt_token(user_id: int, email: str) -> str:
     payload = {
         'user_id': user_id,
         'email': email,
-        'exp': datetime.utcnow() + timedelta(days=30)
+        'exp': datetime.now(datetime.timezone.utc) + timedelta(days=30)
     }
     return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
@@ -439,7 +439,7 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
             "response": response_text,
             "model_used": model,
             "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z"
         }
     except Exception as e:
         # Graceful fallback with error handling
@@ -459,7 +459,7 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
             "response": fallback_response,
             "model_used": model,
             "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z"
         }
 
 @app.post("/search")
