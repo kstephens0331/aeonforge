@@ -6,10 +6,16 @@ Secure API key handling on server-side only
 import os
 import uvicorn
 import httpx
-from fastapi import FastAPI, HTTPException
+import jwt
+import bcrypt
+import stripe
+from datetime import datetime, timedelta
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
+import sqlite3
+import json
 
 # Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -18,6 +24,12 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 SERPAPI_KEY = os.getenv("SERPAPI_KEY")
 NIH_API_KEY = os.getenv("NIH_API_KEY") or os.getenv("NIHPubMed_Key")  # Support both names
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gpt-3.5-turbo")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+JWT_SECRET = os.getenv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production")
+
+# Configure Stripe
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
 
 # Create FastAPI app
 app = FastAPI(
@@ -35,6 +47,121 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize SQLite Database
+def init_db():
+    """Initialize user database"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        name TEXT NOT NULL,
+        plan TEXT DEFAULT 'free',
+        daily_usage INTEGER DEFAULT 0,
+        usage_reset_date TEXT DEFAULT CURRENT_DATE,
+        stripe_customer_id TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+    
+    conn.commit()
+    conn.close()
+
+# Initialize database on startup
+init_db()
+
+# Authentication Helper Functions
+def hash_password(password: str) -> str:
+    """Hash password using bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash"""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def create_jwt_token(user_id: int, email: str) -> str:
+    """Create JWT token"""
+    payload = {
+        'user_id': user_id,
+        'email': email,
+        'exp': datetime.utcnow() + timedelta(days=30)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
+
+def verify_jwt_token(token: str) -> Dict[str, Any]:
+    """Verify JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+def get_current_user(authorization: str = Header(None)):
+    """Get current user from JWT token"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header required")
+    
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = verify_jwt_token(token)
+        
+        # Get user from database
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (payload['user_id'],))
+        user_row = cursor.fetchone()
+        conn.close()
+        
+        if not user_row:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        return {
+            'id': user_row[0],
+            'email': user_row[1],
+            'name': user_row[3],
+            'plan': user_row[4],
+            'daily_usage': user_row[5],
+            'usage_reset_date': user_row[6]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+def check_usage_limits(user: dict) -> bool:
+    """Check if user has exceeded daily usage limits"""
+    # Set daily limits based on plan
+    if user['plan'] == 'pro' or user['plan'] == 'enterprise':
+        return True  # No limits for pro and enterprise
+    elif user['plan'] == 'standard':
+        daily_limit = 100
+    else:  # Free plan
+        daily_limit = 5
+    
+    # Reset daily usage if it's a new day
+    today = datetime.now().date().isoformat()
+    if user['usage_reset_date'] != today:
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET daily_usage = 0, usage_reset_date = ? WHERE id = ?", 
+                      (today, user['id']))
+        conn.commit()
+        conn.close()
+        user['daily_usage'] = 0
+    
+    return user['daily_usage'] < daily_limit
+
+def increment_usage(user_id: int):
+    """Increment user's daily usage count"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET daily_usage = daily_usage + 1 WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
 # Request models
 class ChatRequest(BaseModel):
     message: str
@@ -43,6 +170,19 @@ class ChatRequest(BaseModel):
 
 class SearchRequest(BaseModel):
     query: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+    name: str
+
+class CheckoutRequest(BaseModel):
+    priceId: str
+    plan: str
 
 # AI Model Helper Functions
 async def call_openai(message: str, model: str) -> str:
@@ -151,13 +291,123 @@ async def available_models():
         "total_models": len(models)
     }
 
+# Authentication Endpoints
+@app.post("/auth/login")
+async def login(request: LoginRequest):
+    """User login endpoint"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE email = ?", (request.email,))
+    user_row = cursor.fetchone()
+    conn.close()
+    
+    if not user_row or not verify_password(request.password, user_row[2]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    token = create_jwt_token(user_row[0], user_row[1])
+    
+    return {
+        "token": token,
+        "user": {
+            "id": user_row[0],
+            "email": user_row[1],
+            "name": user_row[3],
+            "plan": user_row[4],
+            "dailyUsage": user_row[5]
+        }
+    }
+
+@app.post("/auth/signup")
+async def signup(request: SignupRequest):
+    """User signup endpoint"""
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    
+    # Check if user already exists
+    cursor.execute("SELECT email FROM users WHERE email = ?", (request.email,))
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create new user
+    hashed_password = hash_password(request.password)
+    cursor.execute(
+        "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
+        (request.email, hashed_password, request.name)
+    )
+    user_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    token = create_jwt_token(user_id, request.email)
+    
+    return {
+        "token": token,
+        "user": {
+            "id": user_id,
+            "email": request.email,
+            "name": request.name,
+            "plan": "free",
+            "dailyUsage": 0
+        }
+    }
+
+@app.get("/auth/verify")
+async def verify_token(current_user: dict = Depends(get_current_user)):
+    """Verify JWT token and return user info"""
+    return {
+        "user": current_user
+    }
+
+@app.post("/payments/create-checkout")
+async def create_checkout(request: CheckoutRequest, current_user: dict = Depends(get_current_user)):
+    """Create Stripe checkout session"""
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=503, detail="Payment processing not configured")
+    
+    try:
+        # Create Stripe checkout session
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price': request.priceId,
+                'quantity': 1,
+            }],
+            mode='subscription',
+            success_url='https://aeonforge.vercel.app/success',
+            cancel_url='https://aeonforge.vercel.app/cancel',
+            customer_email=current_user['email'],
+            metadata={
+                'user_id': current_user['id'],
+                'plan': request.plan
+            }
+        )
+        
+        return {
+            "checkoutUrl": checkout_session.url
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Payment error: {str(e)}")
+
 @app.post("/chat")
-async def chat(request: ChatRequest):
-    """Secure chat endpoint with smart model routing - API keys handled server-side only"""
+async def chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
+    """Secure chat endpoint with usage limits and smart model routing"""
     if not OPENAI_API_KEY and not ANTHROPIC_API_KEY and not GOOGLE_API_KEY:
         raise HTTPException(status_code=503, detail="No AI models configured")
     
+    # Check usage limits for free users
+    if not check_usage_limits(current_user):
+        raise HTTPException(status_code=429, detail="Daily usage limit exceeded. Upgrade to continue.")
+    
     model = request.model or DEFAULT_MODEL
+    
+    # Restrict model access based on plan
+    if current_user['plan'] == 'free':
+        model = "gpt-3.5-turbo"  # Force free users to use basic model
+    elif current_user['plan'] == 'standard':
+        # Standard users get GPT-4 and Claude but not Gemini
+        if model.startswith("gemini-"):
+            model = "gpt-4"  # Fallback to GPT-4 for standard users
     
     try:
         # Smart routing to appropriate AI service based on model
@@ -181,11 +431,15 @@ async def chat(request: ChatRequest):
             else:
                 raise HTTPException(status_code=503, detail="No AI models available")
         
+        # Increment usage for free and standard users
+        if current_user['plan'] in ['free', 'standard']:
+            increment_usage(current_user['id'])
+        
         return {
             "response": response_text,
             "model_used": model,
             "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": "2025-01-01T00:00:00Z"
+            "timestamp": datetime.utcnow().isoformat() + "Z"
         }
     except Exception as e:
         # Graceful fallback with error handling
@@ -197,11 +451,15 @@ async def chat(request: ChatRequest):
             except:
                 pass
         
+        # Still increment usage even on fallback for free and standard users
+        if current_user['plan'] in ['free', 'standard']:
+            increment_usage(current_user['id'])
+        
         return {
             "response": fallback_response,
             "model_used": model,
             "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": "2025-01-01T00:00:00Z"
+            "timestamp": datetime.utcnow().isoformat() + "Z"
         }
 
 @app.post("/search")

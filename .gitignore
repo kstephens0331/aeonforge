@@ -625,4 +625,4 @@ scripts/*_private.py
 !*secret*.template
 !*secret*.md
 !password_requirements.md
-!token_documentation.md
+!token_documentation.md!frontend/.env

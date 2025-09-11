@@ -8,11 +8,21 @@ import Sidebar from './components/Sidebar'
 import ChatInterface from './components/ChatInterface'
 import ProjectsTab from './components/ProjectsTab'
 import MedicalTool from './components/MedicalTool'
+import LoginScreen from './components/LoginScreen'
+import SubscriptionModal from './components/SubscriptionModal'
 
 function App() {
+  // Authentication state
+  const [user, setUser] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [authToken, setAuthToken] = useState(localStorage.getItem('aeonforge_token'))
+  
+  // App state
   const [activeTab, setActiveTab] = useState('chat')
   const [chats, setChats] = useState([])
   const [currentChatId, setCurrentChatId] = useState(null)
+  
   // API keys are now handled server-side only for security
   const [serverInfo, setServerInfo] = useState({
     models: [],
@@ -20,13 +30,34 @@ function App() {
     default_model: 'gpt-3.5-turbo'
   })
 
-  // Initialize with first chat and fetch server capabilities
+  // Initialize authentication and app data
   useEffect(() => {
-    if (chats.length === 0) {
-      createNewChat()
-    }
+    checkAuthStatus()
     fetchServerInfo()
   }, [])
+
+  useEffect(() => {
+    if (isAuthenticated && chats.length === 0) {
+      createNewChat()
+    }
+  }, [isAuthenticated])
+
+  const checkAuthStatus = async () => {
+    if (authToken) {
+      try {
+        const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+        const response = await axios.get(`${apiUrl}/auth/verify`, {
+          headers: { Authorization: `Bearer ${authToken}` }
+        })
+        setUser(response.data.user)
+        setIsAuthenticated(true)
+      } catch (error) {
+        localStorage.removeItem('aeonforge_token')
+        setAuthToken(null)
+        setIsAuthenticated(false)
+      }
+    }
+  }
 
   const fetchServerInfo = async () => {
     try {
@@ -46,6 +77,56 @@ function App() {
     } catch (error) {
       console.warn('Could not fetch server info:', error)
     }
+  }
+
+  // Authentication functions
+  const handleLogin = async (email, password) => {
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    const response = await axios.post(`${apiUrl}/auth/login`, { email, password })
+    
+    const { token, user: userData } = response.data
+    localStorage.setItem('aeonforge_token', token)
+    setAuthToken(token)
+    setUser(userData)
+    setIsAuthenticated(true)
+    
+    // Show subscription modal for free users
+    if (userData.plan === 'free' && userData.dailyUsage >= 3) {
+      setShowSubscriptionModal(true)
+    }
+  }
+
+  const handleSignup = async (email, password, name) => {
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    const response = await axios.post(`${apiUrl}/auth/signup`, { email, password, name })
+    
+    const { token, user: userData } = response.data
+    localStorage.setItem('aeonforge_token', token)
+    setAuthToken(token)
+    setUser(userData)
+    setIsAuthenticated(true)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('aeonforge_token')
+    setAuthToken(null)
+    setUser(null)
+    setIsAuthenticated(false)
+    setChats([])
+    setCurrentChatId(null)
+  }
+
+  const handleUpgrade = async (stripePriceId, planKey) => {
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    const response = await axios.post(`${apiUrl}/payments/create-checkout`, {
+      priceId: stripePriceId,
+      plan: planKey
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    })
+    
+    // Redirect to Stripe checkout
+    window.location.href = response.data.checkoutUrl
   }
 
   const createNewChat = () => {
@@ -97,37 +178,92 @@ function App() {
   }
 
 
-  return (
-    <div className="app-container">
-      <Sidebar
-        chats={chats}
-        currentChatId={currentChatId}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onNewChat={createNewChat}
-        onSelectChat={selectChat}
-        onDeleteChat={deleteChat}
-        serverInfo={serverInfo}
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <LoginScreen 
+        onLogin={handleLogin}
+        onSignup={handleSignup}
       />
+    )
+  }
 
-      <div className="main-content">
-        {activeTab === 'chat' && (
-          <ChatInterface
-            currentChat={getCurrentChat()}
-            onUpdateChat={updateCurrentChat}
-            serverInfo={serverInfo}
-          />
-        )}
-        
-        {activeTab === 'projects' && (
-          <ProjectsTab serverInfo={serverInfo} />
-        )}
-        
-        {activeTab === 'medical' && (
-          <MedicalTool serverInfo={serverInfo} />
-        )}
+  // Main app for authenticated users
+  return (
+    <>
+      <div className="app-container">
+        <Sidebar
+          chats={chats}
+          currentChatId={currentChatId}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onNewChat={createNewChat}
+          onSelectChat={selectChat}
+          onDeleteChat={deleteChat}
+          serverInfo={serverInfo}
+          user={user}
+          onLogout={handleLogout}
+          onShowSubscription={() => setShowSubscriptionModal(true)}
+        />
+
+        <div className="main-content">
+          {activeTab === 'chat' && (
+            <ChatInterface
+              currentChat={getCurrentChat()}
+              onUpdateChat={updateCurrentChat}
+              serverInfo={serverInfo}
+              user={user}
+              authToken={authToken}
+              onShowSubscription={() => setShowSubscriptionModal(true)}
+            />
+          )}
+          
+          {activeTab === 'projects' && ['standard', 'pro', 'enterprise'].includes(user?.plan) && (
+            <ProjectsTab 
+              serverInfo={serverInfo} 
+              user={user}
+              authToken={authToken}
+            />
+          )}
+          
+          {activeTab === 'projects' && user?.plan === 'free' && (
+            <div className="upgrade-required">
+              <h2>🔒 Premium Feature</h2>
+              <p>Project management requires a Standard, Pro, or Enterprise subscription</p>
+              <button onClick={() => setShowSubscriptionModal(true)}>
+                Upgrade Now
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'medical' && ['pro', 'enterprise'].includes(user?.plan) && (
+            <MedicalTool 
+              serverInfo={serverInfo}
+              user={user}
+              authToken={authToken}
+            />
+          )}
+          
+          {activeTab === 'medical' && ['free', 'standard'].includes(user?.plan) && (
+            <div className="upgrade-required">
+              <h2>🔒 Premium Feature</h2>
+              <p>Medical research tools require a Pro or Enterprise subscription</p>
+              <button onClick={() => setShowSubscriptionModal(true)}>
+                Upgrade Now
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        user={user}
+        onUpgrade={handleUpgrade}
+      />
+    </>
   )
 }
 
