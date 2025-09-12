@@ -177,14 +177,28 @@ app = FastAPI(
 )
 
 # Add CORS - Allow both local and production frontends
+# Dynamic CORS configuration for development and production
+def get_cors_origins():
+    base_origins = [
+        "http://localhost:3000",
+        "http://localhost:5173",  # Vite dev server
+        "https://aeonforge.vercel.app",
+        "https://aeonforge-git-main-kstephens0331.vercel.app", 
+        "https://aeonforge-kstephens0331.vercel.app"
+    ]
+    
+    # Add potential Vercel deployment URLs
+    vercel_variants = [
+        "https://aeonforge-stephens-projects.vercel.app",
+        "https://aeonforge-frontend.vercel.app",
+        "https://aeonforge-ui.vercel.app"
+    ]
+    
+    return base_origins + vercel_variants
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://aeonforge.vercel.app",
-        "https://aeonforge-git-main-kstephens0331.vercel.app",
-        "https://aeonforge-kstephens0331.vercel.app"
-    ],
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -490,12 +504,17 @@ def get_current_user(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Authorization header required")
     
     try:
-        token = authorization.replace("Bearer ", "")
+        # Handle both "Bearer token" and just "token" formats
+        token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
         payload = verify_jwt_token(token)
         
         # Get user from database using the unified connection handler
-        user_row = execute_sql("SELECT * FROM users WHERE id = %s" if USE_POSTGRES else "SELECT * FROM users WHERE id = ?", 
-                               (payload['user_id'],), fetch_one=True)
+        try:
+            user_row = execute_sql("SELECT * FROM users WHERE id = %s" if USE_POSTGRES else "SELECT * FROM users WHERE id = ?", 
+                                   (payload['user_id'],), fetch_one=True)
+        except Exception as db_error:
+            print(f"Database error in get_current_user: {db_error}")
+            raise HTTPException(status_code=500, detail="Database connection error")
         
         if not user_row:
             raise HTTPException(status_code=401, detail="User not found")
@@ -511,7 +530,10 @@ def get_current_user(authorization: str = Header(None)):
             'memory_limit': user_row[9],
             'organization_id': user_row[10]
         }
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
+        print(f"Authentication error: {e}")
         raise HTTPException(status_code=401, detail="Invalid authentication")
 
 def check_usage_limits(user: dict) -> bool:
@@ -743,6 +765,21 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy", "platform": "render"}
+
+@app.get("/debug/cors")
+async def debug_cors():
+    """Debug endpoint to check CORS configuration"""
+    return {
+        "allowed_origins": get_cors_origins(),
+        "cors_enabled": True,
+        "platform": "render",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.options("/{path:path}")
+async def handle_options(path: str):
+    """Handle preflight OPTIONS requests"""
+    return {"message": "OK"}
 
 @app.get("/models")
 async def available_models():
