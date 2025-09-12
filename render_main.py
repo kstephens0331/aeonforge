@@ -76,7 +76,7 @@ MEMORY_LIMITS = {
 def get_db_connection():
     """Get database connection - PostgreSQL in production, SQLite locally"""
     if USE_POSTGRES:
-        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor, sslmode='require')
     else:
         conn = sqlite3.connect('aeonforge.db')
         conn.row_factory = sqlite3.Row  # Enable column access by name
@@ -127,133 +127,186 @@ def init_db():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         '''
+        
+        # PostgreSQL compatible table definitions
+        tables = [
+            user_table_sql,
+            '''CREATE TABLE IF NOT EXISTS organizations (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                plan VARCHAR(50) DEFAULT 'enterprise',
+                admin_user_id INTEGER,
+                total_memory_limit BIGINT DEFAULT 2147483648,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (admin_user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS conversations (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                title VARCHAR(500) NOT NULL,
+                model VARCHAR(100) DEFAULT 'gpt-3.5-turbo',
+                memory_size BIGINT DEFAULT 0,
+                is_archived BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS chat_messages (
+                id SERIAL PRIMARY KEY,
+                conversation_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                role VARCHAR(20) NOT NULL,
+                content TEXT NOT NULL,
+                model_used VARCHAR(100),
+                tokens_used INTEGER DEFAULT 0,
+                memory_size BIGINT DEFAULT 0,
+                saved_to_memory BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (conversation_id) REFERENCES conversations (id),
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS user_memory (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                key_name VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                category VARCHAR(100) DEFAULT 'general',
+                memory_size BIGINT DEFAULT 0,
+                importance_score INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS projects (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                status VARCHAR(50) DEFAULT 'active',
+                memory_size BIGINT DEFAULT 0,
+                metadata TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS search_history (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                query VARCHAR(1000) NOT NULL,
+                results_count INTEGER DEFAULT 0,
+                memory_size BIGINT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS memory_usage (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                table_name VARCHAR(100) NOT NULL,
+                record_id INTEGER NOT NULL,
+                memory_size BIGINT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )'''
+        ]
     else:
-        user_table_sql = '''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            name TEXT NOT NULL,
-            plan TEXT DEFAULT 'free',
-            daily_usage INTEGER DEFAULT 0,
-            usage_reset_date TEXT DEFAULT CURRENT_DATE,
-            stripe_customer_id TEXT,
-            memory_used INTEGER DEFAULT 0,
-            memory_limit INTEGER DEFAULT 536870912,
-            organization_id INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        '''
+        # SQLite compatible table definitions
+        tables = [
+            '''CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                name TEXT NOT NULL,
+                plan TEXT DEFAULT 'free',
+                daily_usage INTEGER DEFAULT 0,
+                usage_reset_date TEXT DEFAULT CURRENT_DATE,
+                stripe_customer_id TEXT,
+                memory_used INTEGER DEFAULT 0,
+                memory_limit INTEGER DEFAULT 536870912,
+                organization_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )''',
+            '''CREATE TABLE IF NOT EXISTS organizations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                plan TEXT DEFAULT 'enterprise',
+                admin_user_id INTEGER,
+                total_memory_limit INTEGER DEFAULT 2048,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (admin_user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                model TEXT DEFAULT 'gpt-3.5-turbo',
+                memory_size INTEGER DEFAULT 0,
+                is_archived BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS chat_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                model_used TEXT,
+                tokens_used INTEGER DEFAULT 0,
+                memory_size INTEGER DEFAULT 0,
+                saved_to_memory BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (conversation_id) REFERENCES conversations (id),
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS user_memory (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                key_name TEXT NOT NULL,
+                content TEXT NOT NULL,
+                category TEXT DEFAULT 'general',
+                memory_size INTEGER DEFAULT 0,
+                importance_score INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT,
+                status TEXT DEFAULT 'active',
+                memory_size INTEGER DEFAULT 0,
+                metadata TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS search_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                query TEXT NOT NULL,
+                results_count INTEGER DEFAULT 0,
+                memory_size INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )''',
+            '''CREATE TABLE IF NOT EXISTS memory_usage (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                table_name TEXT NOT NULL,
+                record_id INTEGER NOT NULL,
+                memory_size INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )'''
+        ]
     
-    execute_sql(user_table_sql)
-    
-    # Organizations table for enterprise accounts
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS organizations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        plan TEXT DEFAULT 'enterprise',
-        admin_user_id INTEGER,
-        total_memory_limit INTEGER DEFAULT 2048,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (admin_user_id) REFERENCES users (id)
-    )
-    ''')
-    
-    # Conversations table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS conversations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        model TEXT DEFAULT 'gpt-3.5-turbo',
-        memory_size INTEGER DEFAULT 0,
-        is_archived BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-    ''')
-    
-    # Chat messages table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS chat_messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        conversation_id INTEGER NOT NULL,
-        user_id INTEGER NOT NULL,
-        role TEXT NOT NULL,
-        content TEXT NOT NULL,
-        model_used TEXT,
-        tokens_used INTEGER DEFAULT 0,
-        memory_size INTEGER DEFAULT 0,
-        saved_to_memory BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (conversation_id) REFERENCES conversations (id),
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-    ''')
-    
-    # User memory/knowledge base
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS user_memory (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        key_name TEXT NOT NULL,
-        content TEXT NOT NULL,
-        category TEXT DEFAULT 'general',
-        memory_size INTEGER DEFAULT 0,
-        importance_score INTEGER DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-    ''')
-    
-    # Project history table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS projects (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        description TEXT,
-        status TEXT DEFAULT 'active',
-        memory_size INTEGER DEFAULT 0,
-        metadata TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-    ''')
-    
-    # Search history table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS search_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        query TEXT NOT NULL,
-        results_count INTEGER DEFAULT 0,
-        memory_size INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-    ''')
-    
-    # Memory tracking for quota management
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS memory_usage (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        table_name TEXT NOT NULL,
-        record_id INTEGER NOT NULL,
-        memory_size INTEGER NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-    ''')
-    
-    conn.commit()
-    conn.close()
+    # Execute all table creation statements
+    for table_sql in tables:
+        execute_sql(table_sql)
 
 # Initialize database on startup
 init_db()
@@ -269,10 +322,11 @@ def verify_password(password: str, hashed: str) -> bool:
 
 def create_jwt_token(user_id: int, email: str) -> str:
     """Create JWT token"""
+    from datetime import timezone
     payload = {
         'user_id': user_id,
         'email': email,
-        'exp': datetime.now(datetime.timezone.utc) + timedelta(days=30)
+        'exp': datetime.now(timezone.utc) + timedelta(days=30)
     }
     return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
@@ -295,12 +349,9 @@ def get_current_user(authorization: str = Header(None)):
         token = authorization.replace("Bearer ", "")
         payload = verify_jwt_token(token)
         
-        # Get user from database
-        conn = sqlite3.connect('aeonforge.db')
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE id = ?", (payload['user_id'],))
-        user_row = cursor.fetchone()
-        conn.close()
+        # Get user from database using the unified connection handler
+        user_row = execute_sql("SELECT * FROM users WHERE id = %s" if USE_POSTGRES else "SELECT * FROM users WHERE id = ?", 
+                               (payload['user_id'],), fetch_one=True)
         
         if not user_row:
             raise HTTPException(status_code=401, detail="User not found")
@@ -332,23 +383,17 @@ def check_usage_limits(user: dict) -> bool:
     # Reset daily usage if it's a new day
     today = datetime.now().date().isoformat()
     if user['usage_reset_date'] != today:
-        conn = sqlite3.connect('users.db')
-        cursor = conn.cursor()
-        cursor.execute("UPDATE users SET daily_usage = 0, usage_reset_date = ? WHERE id = ?", 
-                      (today, user['id']))
-        conn.commit()
-        conn.close()
+        execute_sql("UPDATE users SET daily_usage = 0, usage_reset_date = %s WHERE id = %s" if USE_POSTGRES 
+                   else "UPDATE users SET daily_usage = 0, usage_reset_date = ? WHERE id = ?", 
+                   (today, user['id']))
         user['daily_usage'] = 0
     
     return user['daily_usage'] < daily_limit
 
 def increment_usage(user_id: int):
     """Increment user's daily usage count"""
-    conn = sqlite3.connect('aeonforge.db')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET daily_usage = daily_usage + 1 WHERE id = ?", (user_id,))
-    conn.commit()
-    conn.close()
+    execute_sql("UPDATE users SET daily_usage = daily_usage + 1 WHERE id = %s" if USE_POSTGRES 
+               else "UPDATE users SET daily_usage = daily_usage + 1 WHERE id = ?", (user_id,))
 
 # Memory Management Functions
 def calculate_memory_size(content: str) -> int:
@@ -363,60 +408,61 @@ def check_memory_limits(user: dict, additional_memory: int = 0) -> bool:
 
 def update_user_memory_usage(user_id: int, memory_change: int):
     """Update user's memory usage"""
-    conn = sqlite3.connect('aeonforge.db')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE users SET memory_used = memory_used + ? WHERE id = ?", (memory_change, user_id))
-    conn.commit()
-    conn.close()
+    execute_sql("UPDATE users SET memory_used = memory_used + %s WHERE id = %s" if USE_POSTGRES 
+               else "UPDATE users SET memory_used = memory_used + ? WHERE id = ?", (memory_change, user_id))
 
 def save_chat_message(conversation_id: int, user_id: int, role: str, content: str, 
                       model_used: str = None, save_to_memory: bool = True):
     """Save chat message with memory tracking"""
     memory_size = calculate_memory_size(content) if save_to_memory else 0
     
-    conn = sqlite3.connect('aeonforge.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
+    sql = '''
+        INSERT INTO chat_messages 
+        (conversation_id, user_id, role, content, model_used, memory_size, saved_to_memory)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    ''' if USE_POSTGRES else '''
         INSERT INTO chat_messages 
         (conversation_id, user_id, role, content, model_used, memory_size, saved_to_memory)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (conversation_id, user_id, role, content, model_used, memory_size, save_to_memory))
+    '''
+    
+    execute_sql(sql, (conversation_id, user_id, role, content, model_used, memory_size, save_to_memory))
     
     if save_to_memory:
         update_user_memory_usage(user_id, memory_size)
-    
-    conn.commit()
-    conn.close()
 
 def save_to_user_memory(user_id: int, key_name: str, content: str, category: str = "general"):
     """Save information to user's memory/knowledge base"""
     memory_size = calculate_memory_size(content)
     
-    conn = sqlite3.connect('aeonforge.db')
-    cursor = conn.cursor()
-    
     # Check if key already exists, update or insert
-    cursor.execute("SELECT id, memory_size FROM user_memory WHERE user_id = ? AND key_name = ?", (user_id, key_name))
-    existing = cursor.fetchone()
+    existing = execute_sql("SELECT id, memory_size FROM user_memory WHERE user_id = %s AND key_name = %s" if USE_POSTGRES 
+                          else "SELECT id, memory_size FROM user_memory WHERE user_id = ? AND key_name = ?", 
+                          (user_id, key_name), fetch_one=True)
     
     if existing:
         old_memory_size = existing[1]
-        cursor.execute('''
+        update_sql = '''
+            UPDATE user_memory 
+            SET content = %s, memory_size = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        ''' if USE_POSTGRES else '''
             UPDATE user_memory 
             SET content = ?, memory_size = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
-        ''', (content, memory_size, existing[0]))
+        '''
+        execute_sql(update_sql, (content, memory_size, existing[0]))
         update_user_memory_usage(user_id, memory_size - old_memory_size)
     else:
-        cursor.execute('''
+        insert_sql = '''
+            INSERT INTO user_memory (user_id, key_name, content, category, memory_size)
+            VALUES (%s, %s, %s, %s, %s)
+        ''' if USE_POSTGRES else '''
             INSERT INTO user_memory (user_id, key_name, content, category, memory_size)
             VALUES (?, ?, ?, ?, ?)
-        ''', (user_id, key_name, content, category, memory_size))
+        '''
+        execute_sql(insert_sql, (user_id, key_name, content, category, memory_size))
         update_user_memory_usage(user_id, memory_size)
-    
-    conn.commit()
-    conn.close()
 
 # Request models
 class ChatRequest(BaseModel):
@@ -565,11 +611,9 @@ async def available_models():
 @app.post("/auth/login")
 async def login(request: LoginRequest):
     """User login endpoint"""
-    conn = sqlite3.connect('aeonforge.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE email = ?", (request.email,))
-    user_row = cursor.fetchone()
-    conn.close()
+    user_row = execute_sql("SELECT * FROM users WHERE email = %s" if USE_POSTGRES 
+                          else "SELECT * FROM users WHERE email = ?", 
+                          (request.email,), fetch_one=True)
     
     if not user_row or not verify_password(request.password, user_row[2]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -592,13 +636,11 @@ async def login(request: LoginRequest):
 @app.post("/auth/signup")
 async def signup(request: SignupRequest):
     """User signup endpoint with memory allocation"""
-    conn = sqlite3.connect('aeonforge.db')
-    cursor = conn.cursor()
-    
     # Check if user already exists
-    cursor.execute("SELECT email FROM users WHERE email = ?", (request.email,))
-    if cursor.fetchone():
-        conn.close()
+    existing_user = execute_sql("SELECT email FROM users WHERE email = %s" if USE_POSTGRES 
+                               else "SELECT email FROM users WHERE email = ?", 
+                               (request.email,), fetch_one=True)
+    if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Create new user with memory limit based on plan
@@ -606,13 +648,16 @@ async def signup(request: SignupRequest):
     plan = "free"
     memory_limit = MEMORY_LIMITS[plan] * 1024 * 1024  # Convert MB to bytes
     
-    cursor.execute(
-        "INSERT INTO users (email, password, name, plan, memory_limit) VALUES (?, ?, ?, ?, ?)",
-        (request.email, hashed_password, request.name, plan, memory_limit)
+    user_id = execute_sql(
+        "INSERT INTO users (email, password, name, plan, memory_limit) VALUES (%s, %s, %s, %s, %s) RETURNING id" if USE_POSTGRES 
+        else "INSERT INTO users (email, password, name, plan, memory_limit) VALUES (?, ?, ?, ?, ?)",
+        (request.email, hashed_password, request.name, plan, memory_limit),
+        fetch_one=True if USE_POSTGRES else False
     )
-    user_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
+    
+    # For PostgreSQL, get the returned ID, for SQLite use the returned rowid
+    if USE_POSTGRES:
+        user_id = user_id[0] if user_id else None
     
     token = create_jwt_token(user_id, request.email)
     
