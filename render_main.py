@@ -1019,27 +1019,11 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
         print(f"Error type: {type(e).__name__}")
         print(f"Traceback: {traceback.format_exc()}")
         
-        # Graceful fallback with error handling
-        fallback_response = f"AI response using {model}: {processed_message}"
-        if "gemini" in model.lower() and OPENAI_API_KEY:
-            try:
-                fallback_response = await call_openai(processed_message, "gpt-3.5-turbo")
-                model = "gpt-3.5-turbo-fallback"
-            except:
-                pass
-        
-        # Still increment usage even on fallback for free and standard users
-        if current_user['plan'] in ['free', 'standard']:
-            increment_usage(current_user['id'])
-        
-        return {
-            "response": fallback_response + memory_warning,
-            "model_used": model,
-            "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
-            "saved_to_memory": save_to_memory,
-            "memory_command": memory_config.get("command")
-        }
+        # Return the actual error to client for debugging
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Chat error: {str(e)} | Type: {type(e).__name__}"
+        )
 
 # Memory and Chat Management Endpoints
 @app.post("/conversations")
