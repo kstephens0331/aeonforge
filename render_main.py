@@ -322,8 +322,12 @@ def init_db():
         print(f"Database initialization error: {e}")
         print("Application will start but database features may not work properly")
 
-# Initialize database on startup
-init_db()
+# Initialize database on startup (optional)
+try:
+    init_db()
+except Exception as e:
+    print(f"Warning: Database initialization failed: {e}")
+    print("Application starting without database initialization")
 
 # Authentication Helper Functions
 def hash_password(password: str) -> str:
