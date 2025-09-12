@@ -927,103 +927,51 @@ def parse_memory_commands(message: str) -> tuple[str, dict]:
 
 @app.post("/chat")
 async def chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
-    """Enhanced chat endpoint with memory management and special commands"""
-    if not OPENAI_API_KEY and not ANTHROPIC_API_KEY and not GOOGLE_API_KEY:
-        raise HTTPException(status_code=503, detail="No AI models configured")
-    
-    # Check usage limits for free users
-    if not check_usage_limits(current_user):
-        raise HTTPException(status_code=429, detail="Daily usage limit exceeded. Upgrade to continue.")
-    
-    # Parse memory commands
-    processed_message, memory_config = parse_memory_commands(request.message)
-    save_to_memory = memory_config.get("save_to_memory", request.save_to_memory)
-    
-    # Handle special memory commands
-    if memory_config.get("command") == "update_memory":
-        save_to_user_memory(current_user['id'], memory_config['key'], memory_config['value'])
-        return {
-            "response": f"✅ Updated memory: {memory_config['key']} = {memory_config['value']}",
-            "model_used": "memory-system",
-            "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
-            "memory_updated": True
-        }
-    
-    model = request.model or DEFAULT_MODEL
-    
-    # Restrict model access based on plan
-    if current_user['plan'] == 'free':
-        model = "gpt-3.5-turbo"  # Force free users to use basic model
-    elif current_user['plan'] == 'standard':
-        # Standard users get GPT-4 and Claude but not Gemini
-        if model.startswith("gemini-"):
-            model = "gpt-4"  # Fallback to GPT-4 for standard users
-    
-    # Check memory limits if saving to memory
-    if save_to_memory:
-        message_memory_size = calculate_memory_size(processed_message)
-        if not check_memory_limits(current_user, message_memory_size):
-            save_to_memory = False
-            memory_warning = " (Not saved to memory - limit exceeded)"
-        else:
-            memory_warning = ""
-    else:
-        memory_warning = " (Not saved to memory as requested)"
-    
+    """Simplified chat endpoint for debugging"""
     try:
-        # Smart routing to appropriate AI service based on model
-        if model.startswith("gpt-") and OPENAI_API_KEY:
-            response_text = await call_openai(processed_message, model)
-        elif model.startswith("claude-") and ANTHROPIC_API_KEY:
-            response_text = await call_anthropic(processed_message, model)
-        elif model.startswith("gemini-") and GOOGLE_API_KEY:
-            response_text = await call_google_gemini(processed_message, model)
-        else:
-            # Intelligent fallback to best available model
-            if GOOGLE_API_KEY:
-                response_text = await call_google_gemini(processed_message, "gemini-1.5-flash")
-                model = "gemini-1.5-flash"
-            elif OPENAI_API_KEY:
-                response_text = await call_openai(processed_message, "gpt-3.5-turbo")
-                model = "gpt-3.5-turbo"
-            elif ANTHROPIC_API_KEY:
-                response_text = await call_anthropic(processed_message, "claude-3-haiku")
-                model = "claude-3-haiku"
-            else:
-                raise HTTPException(status_code=503, detail="No AI models available")
+        # Basic validation
+        if not OPENAI_API_KEY and not ANTHROPIC_API_KEY and not GOOGLE_API_KEY:
+            raise HTTPException(status_code=503, detail="No AI models configured")
         
-        # Save chat messages to database if conversation_id provided
-        if request.conversation_id and request.conversation_id != "new-conversation":
-            try:
-                conv_id = int(request.conversation_id)
-                save_chat_message(conv_id, current_user['id'], "user", processed_message, model, save_to_memory)
-                save_chat_message(conv_id, current_user['id'], "assistant", response_text, model, save_to_memory)
-            except ValueError:
-                pass  # Invalid conversation_id format
+        # Check usage limits for free users
+        if not check_usage_limits(current_user):
+            raise HTTPException(status_code=429, detail="Daily usage limit exceeded. Upgrade to continue.")
+        
+        # Use simple message processing
+        processed_message = request.message
+        model = "gpt-3.5-turbo"  # Force to known working model
+        
+        # Try OpenAI call
+        if OPENAI_API_KEY:
+            response_text = await call_openai(processed_message, model)
+        else:
+            # Return simple fallback
+            response_text = f"Echo: {processed_message}"
         
         # Increment usage for free and standard users
         if current_user['plan'] in ['free', 'standard']:
             increment_usage(current_user['id'])
         
         return {
-            "response": response_text + memory_warning,
+            "response": response_text,
             "model_used": model,
             "conversation_id": request.conversation_id or "new-conversation",
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat() + "Z",
-            "saved_to_memory": save_to_memory,
-            "memory_command": memory_config.get("command")
+            "timestamp": datetime.now().isoformat() + "Z"
         }
+        
     except Exception as e:
         print(f"Chat endpoint error: {str(e)}")
         print(f"Error type: {type(e).__name__}")
         print(f"Traceback: {traceback.format_exc()}")
         
-        # Return the actual error to client for debugging
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Chat error: {str(e)} | Type: {type(e).__name__}"
-        )
+        # Return detailed error for debugging
+        return {
+            "response": f"Error: {str(e)}",
+            "error_type": type(e).__name__,
+            "model_used": "error",
+            "conversation_id": "error",
+            "timestamp": datetime.now().isoformat() + "Z"
+        }
 
 # Memory and Chat Management Endpoints
 @app.post("/conversations")
