@@ -210,18 +210,13 @@ function ChatInterface({ currentChat, onUpdateChat, serverInfo, user, authToken,
           <div key={message.id} className={`message ${message.type}`}>
             {message.type === 'agent' && (
               <div className="message-avatar">
-                {message.agent === 'project_manager' ? 'PM' :
-                 message.agent === 'senior_developer' ? 'SD' :
-                 message.agent === 'assistant' ? 'AI' : 'A'}
+                A
               </div>
             )}
             <div className="message-content">
               {message.agent && message.type === 'agent' && (
                 <div className="message-header">
-                  {message.agent === 'project_manager' ? 'Project Manager' :
-                   message.agent === 'senior_developer' ? 'Senior Developer' :
-                   message.agent === 'assistant' ? 'Assistant' :
-                   message.agent}
+                  Aeon
                 </div>
               )}
               <div dangerouslySetInnerHTML={{ 
