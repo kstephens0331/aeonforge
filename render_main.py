@@ -13,9 +13,12 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import sqlite3
 import json
+import sys
+import importlib
+import traceback
 
 # Database imports - PostgreSQL support
 try:
@@ -24,6 +27,128 @@ try:
     POSTGRES_AVAILABLE = True
 except ImportError:
     POSTGRES_AVAILABLE = False
+
+# Tools system integration
+sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
+
+# Dynamic tool loading system
+class ToolsManager:
+    def __init__(self):
+        self.tools = {}
+        self.tool_categories = {
+            'file_operations': [],
+            'business_productivity': [],
+            'code_intelligence': [], 
+            'creative_design': [],
+            'natural_language': [],
+            'cloud_integrations': [],
+            'web_tools': [],
+            'git_tools': [],
+            'pdf_tools': [],
+            'advanced_tools': []
+        }
+        self.load_tools()
+    
+    def load_tools(self):
+        """Load all available tools from the tools directory"""
+        try:
+            # Core tools
+            self.load_tool_module('file_tools', 'file_operations')
+            self.load_tool_module('web_tools', 'web_tools')
+            self.load_tool_module('git_tools', 'git_tools')
+            self.load_tool_module('pdf_tools', 'pdf_tools')
+            self.load_tool_module('api_key_manager', 'advanced_tools')
+            self.load_tool_module('approval_system', 'advanced_tools')
+            
+            # Business productivity
+            self.load_tool_category('business_productivity', 'business_productivity')
+            
+            # Code intelligence
+            self.load_tool_category('code_intelligence', 'code_intelligence')
+            
+            # Creative design
+            self.load_tool_category('creative_design', 'creative_design')
+            
+            # Natural language
+            self.load_tool_category('natural_language', 'natural_language')
+            
+            # Cloud and integrations
+            self.load_tool_module('cloud_integrations', 'cloud_integrations')
+            self.load_tool_module('platform_integrations', 'cloud_integrations')
+            self.load_tool_module('service_integrations', 'cloud_integrations')
+            
+            print(f"Loaded {len(self.tools)} tools across {len(self.tool_categories)} categories")
+            
+        except Exception as e:
+            print(f"Error loading tools: {e}")
+            traceback.print_exc()
+    
+    def load_tool_module(self, module_name, category):
+        """Load a specific tool module"""
+        try:
+            module = importlib.import_module(module_name)
+            # Get all functions from the module
+            for attr_name in dir(module):
+                attr = getattr(module, attr_name)
+                if callable(attr) and not attr_name.startswith('_'):
+                    tool_info = {
+                        'name': attr_name,
+                        'function': attr,
+                        'module': module_name,
+                        'category': category,
+                        'description': getattr(attr, '__doc__', f'{attr_name} from {module_name}')
+                    }
+                    self.tools[f"{module_name}.{attr_name}"] = tool_info
+                    self.tool_categories[category].append(tool_info)
+        except Exception as e:
+            print(f"Failed to load {module_name}: {e}")
+    
+    def load_tool_category(self, directory, category):
+        """Load all tools from a category directory"""
+        try:
+            category_path = os.path.join('tools', directory)
+            if os.path.exists(category_path):
+                for filename in os.listdir(category_path):
+                    if filename.endswith('.py') and not filename.startswith('__'):
+                        module_name = f"{directory}.{filename[:-3]}"
+                        self.load_tool_module(module_name, category)
+        except Exception as e:
+            print(f"Failed to load category {directory}: {e}")
+    
+    def get_tool(self, tool_id: str):
+        """Get a specific tool by ID"""
+        return self.tools.get(tool_id)
+    
+    def list_tools(self, category: str = None):
+        """List all tools or tools in a specific category"""
+        if category and category in self.tool_categories:
+            return self.tool_categories[category]
+        return list(self.tools.values())
+    
+    async def execute_tool(self, tool_id: str, **kwargs):
+        """Execute a tool with given parameters"""
+        tool = self.get_tool(tool_id)
+        if not tool:
+            raise HTTPException(status_code=404, detail=f"Tool {tool_id} not found")
+        
+        try:
+            result = tool['function'](**kwargs)
+            return {
+                "success": True,
+                "tool": tool_id,
+                "result": result,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "tool": tool_id,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+# Initialize tools manager
+tools_manager = ToolsManager()
 
 # Load environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -519,6 +644,14 @@ class ConversationRequest(BaseModel):
     title: str
     model: Optional[str] = "gpt-3.5-turbo"
 
+# Tool request models
+class ToolExecutionRequest(BaseModel):
+    tool_id: str
+    parameters: Dict[str, Any] = {}
+
+class ToolListRequest(BaseModel):
+    category: Optional[str] = None
+
 # AI Model Helper Functions
 async def call_openai(message: str, model: str) -> str:
     """Call OpenAI API"""
@@ -601,7 +734,9 @@ async def root():
             "google_available": bool(GOOGLE_API_KEY),
             "search_available": bool(SERPAPI_KEY),
             "nih_available": bool(NIH_API_KEY),
-            "default_model": DEFAULT_MODEL
+            "default_model": DEFAULT_MODEL,
+            "tools_loaded": len(tools_manager.tools),
+            "tool_categories": len(tools_manager.tool_categories)
         }
     }
 
@@ -1033,6 +1168,88 @@ async def get_memory_usage(current_user: dict = Depends(get_current_user)):
         "usage_percentage": (current_user.get('memory_used', 0) / current_user.get('memory_limit', 1)) * 100,
         "plan": current_user['plan']
     }
+
+# Tools Management Endpoints
+@app.get("/tools")
+async def list_tools(category: str = None, current_user: dict = Depends(get_current_user)):
+    """List all available tools or tools in a specific category"""
+    try:
+        tools = tools_manager.list_tools(category)
+        # Convert tools to serializable format
+        serializable_tools = []
+        for tool in tools:
+            serializable_tools.append({
+                'name': tool['name'],
+                'module': tool['module'],
+                'category': tool['category'],
+                'description': tool['description'][:200] if tool['description'] else 'No description available',
+                'tool_id': f"{tool['module']}.{tool['name']}"
+            })
+        
+        return {
+            "tools": serializable_tools,
+            "total_count": len(serializable_tools),
+            "category": category or "all",
+            "categories": list(tools_manager.tool_categories.keys())
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing tools: {str(e)}")
+
+@app.get("/tools/categories")
+async def get_tool_categories(current_user: dict = Depends(get_current_user)):
+    """Get all available tool categories with counts"""
+    try:
+        categories = {}
+        for category, tools in tools_manager.tool_categories.items():
+            categories[category] = {
+                "name": category,
+                "count": len(tools),
+                "description": f"Tools in {category} category"
+            }
+        
+        return {
+            "categories": categories,
+            "total_categories": len(categories),
+            "total_tools": len(tools_manager.tools)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting categories: {str(e)}")
+
+@app.post("/tools/execute")
+async def execute_tool(request: ToolExecutionRequest, current_user: dict = Depends(get_current_user)):
+    """Execute a specific tool with parameters"""
+    if not check_usage_limits(current_user):
+        raise HTTPException(status_code=429, detail="Daily usage limit exceeded. Upgrade to continue.")
+    
+    try:
+        result = await tools_manager.execute_tool(request.tool_id, **request.parameters)
+        
+        # Increment usage for free and standard users
+        if current_user['plan'] in ['free', 'standard']:
+            increment_usage(current_user['id'])
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error executing tool: {str(e)}")
+
+@app.get("/tools/{tool_id}")
+async def get_tool_info(tool_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed information about a specific tool"""
+    try:
+        tool = tools_manager.get_tool(tool_id)
+        if not tool:
+            raise HTTPException(status_code=404, detail=f"Tool {tool_id} not found")
+        
+        return {
+            "tool_id": tool_id,
+            "name": tool['name'],
+            "module": tool['module'],
+            "category": tool['category'],
+            "description": tool['description'],
+            "available": True
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting tool info: {str(e)}")
 
 @app.post("/search")
 async def search(request: SearchRequest, current_user: dict = Depends(get_current_user)):
