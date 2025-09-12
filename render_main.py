@@ -76,7 +76,15 @@ MEMORY_LIMITS = {
 def get_db_connection():
     """Get database connection - PostgreSQL in production, SQLite locally"""
     if USE_POSTGRES:
-        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor, sslmode='require')
+        try:
+            return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor, sslmode='require')
+        except Exception as e:
+            print(f"PostgreSQL connection failed: {e}")
+            print("Falling back to SQLite for development")
+            # Fall back to SQLite if PostgreSQL fails
+            conn = sqlite3.connect('aeonforge.db')
+            conn.row_factory = sqlite3.Row
+            return conn
     else:
         conn = sqlite3.connect('aeonforge.db')
         conn.row_factory = sqlite3.Row  # Enable column access by name
@@ -108,6 +116,7 @@ def execute_sql(query: str, params=None, fetch_one=False, fetch_all=False):
 # Initialize Enhanced Database
 def init_db():
     """Initialize comprehensive database with all required tables"""
+    try:
     # SQL schemas for both SQLite and PostgreSQL
     if USE_POSTGRES:
         user_table_sql = '''
@@ -304,9 +313,14 @@ def init_db():
             )'''
         ]
     
-    # Execute all table creation statements
-    for table_sql in tables:
-        execute_sql(table_sql)
+        # Execute all table creation statements
+        for table_sql in tables:
+            execute_sql(table_sql)
+        
+        print(f"Database initialized successfully using {'PostgreSQL' if USE_POSTGRES else 'SQLite'}")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+        print("Application will start but database features may not work properly")
 
 # Initialize database on startup
 init_db()
