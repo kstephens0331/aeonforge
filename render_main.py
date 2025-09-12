@@ -1041,14 +1041,13 @@ async def search(request: SearchRequest, current_user: dict = Depends(get_curren
     
     # Save search to history
     memory_size = calculate_memory_size(request.query)
-    conn = sqlite3.connect('aeonforge.db')
-    cursor = conn.cursor()
-    cursor.execute('''
+    execute_sql('''
+        INSERT INTO search_history (user_id, query, memory_size)
+        VALUES (%s, %s, %s)
+    ''' if USE_POSTGRES else '''
         INSERT INTO search_history (user_id, query, memory_size)
         VALUES (?, ?, ?)
     ''', (current_user['id'], request.query, memory_size))
-    conn.commit()
-    conn.close()
     
     # Mock search response
     return {
@@ -1059,6 +1058,62 @@ async def search(request: SearchRequest, current_user: dict = Depends(get_curren
         "search_engine": "SerpAPI",
         "saved_to_history": True
     }
+
+@app.post("/webhooks/stripe")
+async def stripe_webhook(request):
+    """Handle Stripe webhook events"""
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=503, detail="Stripe not configured")
+    
+    try:
+        # Get the raw body and signature
+        payload = await request.body()
+        sig_header = request.headers.get('stripe-signature')
+        
+        if not sig_header:
+            raise HTTPException(status_code=400, detail="Missing Stripe signature")
+        
+        # This would normally verify the webhook signature
+        # For now, we'll just parse the event
+        import json
+        event_data = json.loads(payload.decode('utf-8'))
+        event_type = event_data.get('type')
+        
+        # Handle different webhook events
+        if event_type == 'customer.subscription.created':
+            # Handle new subscription
+            subscription = event_data['data']['object']
+            customer_id = subscription['customer']
+            
+            # Update user's plan based on subscription
+            # This would be implemented based on your plan structure
+            print(f"New subscription created for customer: {customer_id}")
+            
+        elif event_type == 'customer.subscription.updated':
+            # Handle subscription changes
+            subscription = event_data['data']['object']
+            print(f"Subscription updated: {subscription['id']}")
+            
+        elif event_type == 'customer.subscription.deleted':
+            # Handle subscription cancellation
+            subscription = event_data['data']['object']
+            print(f"Subscription cancelled: {subscription['id']}")
+            
+        elif event_type == 'invoice.payment_succeeded':
+            # Handle successful payment
+            invoice = event_data['data']['object']
+            print(f"Payment succeeded: {invoice['id']}")
+            
+        elif event_type == 'invoice.payment_failed':
+            # Handle failed payment
+            invoice = event_data['data']['object']
+            print(f"Payment failed: {invoice['id']}")
+        
+        return {"status": "success"}
+        
+    except Exception as e:
+        print(f"Stripe webhook error: {e}")
+        raise HTTPException(status_code=400, detail="Webhook processing failed")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
