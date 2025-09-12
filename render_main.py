@@ -33,6 +33,7 @@ SERPAPI_KEY = os.getenv("SERPAPI_KEY")
 NIH_API_KEY = os.getenv("NIH_API_KEY") or os.getenv("NIHPubMed_Key")  # Support both names
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gpt-3.5-turbo")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 JWT_SECRET = os.getenv("JWT_SECRET", "your-super-secret-jwt-key-change-in-production")
 
 # Database configuration
@@ -1062,7 +1063,7 @@ async def search(request: SearchRequest, current_user: dict = Depends(get_curren
 @app.post("/webhooks/stripe")
 async def stripe_webhook(request):
     """Handle Stripe webhook events"""
-    if not STRIPE_SECRET_KEY:
+    if not STRIPE_SECRET_KEY or not STRIPE_WEBHOOK_SECRET:
         raise HTTPException(status_code=503, detail="Stripe not configured")
     
     try:
@@ -1073,41 +1074,53 @@ async def stripe_webhook(request):
         if not sig_header:
             raise HTTPException(status_code=400, detail="Missing Stripe signature")
         
-        # This would normally verify the webhook signature
-        # For now, we'll just parse the event
-        import json
-        event_data = json.loads(payload.decode('utf-8'))
-        event_type = event_data.get('type')
+        # Verify the webhook signature
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, STRIPE_WEBHOOK_SECRET
+            )
+        except ValueError as e:
+            # Invalid payload
+            raise HTTPException(status_code=400, detail="Invalid payload")
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            raise HTTPException(status_code=400, detail="Invalid signature")
+        
+        event_type = event.get('type')
+        event_data = event.get('data', {}).get('object', {})
         
         # Handle different webhook events
         if event_type == 'customer.subscription.created':
             # Handle new subscription
-            subscription = event_data['data']['object']
-            customer_id = subscription['customer']
+            customer_id = event_data.get('customer')
+            subscription_id = event_data.get('id')
             
             # Update user's plan based on subscription
             # This would be implemented based on your plan structure
-            print(f"New subscription created for customer: {customer_id}")
+            print(f"New subscription created: {subscription_id} for customer: {customer_id}")
             
         elif event_type == 'customer.subscription.updated':
             # Handle subscription changes
-            subscription = event_data['data']['object']
-            print(f"Subscription updated: {subscription['id']}")
+            subscription_id = event_data.get('id')
+            print(f"Subscription updated: {subscription_id}")
             
         elif event_type == 'customer.subscription.deleted':
             # Handle subscription cancellation
-            subscription = event_data['data']['object']
-            print(f"Subscription cancelled: {subscription['id']}")
+            subscription_id = event_data.get('id')
+            customer_id = event_data.get('customer')
+            print(f"Subscription cancelled: {subscription_id} for customer: {customer_id}")
             
         elif event_type == 'invoice.payment_succeeded':
             # Handle successful payment
-            invoice = event_data['data']['object']
-            print(f"Payment succeeded: {invoice['id']}")
+            invoice_id = event_data.get('id')
+            customer_id = event_data.get('customer')
+            print(f"Payment succeeded: {invoice_id} for customer: {customer_id}")
             
         elif event_type == 'invoice.payment_failed':
             # Handle failed payment
-            invoice = event_data['data']['object']
-            print(f"Payment failed: {invoice['id']}")
+            invoice_id = event_data.get('id')
+            customer_id = event_data.get('customer')
+            print(f"Payment failed: {invoice_id} for customer: {customer_id}")
         
         return {"status": "success"}
         
