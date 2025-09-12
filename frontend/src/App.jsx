@@ -136,12 +136,7 @@ function App() {
     const newChat = {
       id: newChatId,
       title: 'New Chat',
-      messages: [{
-        id: now + 1, // Ensure unique ID by adding 1
-        type: 'system',
-        content: 'Aeonforge AI Development System ready! Ask me anything - from coding projects to medical research.',
-        timestamp: new Date().toISOString()
-      }],
+      messages: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
