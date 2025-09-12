@@ -539,10 +539,10 @@ def get_current_user(authorization: str = Header(None)):
             'email': user_row[1],
             'name': user_row[3],
             'plan': user_row[4],
-            'daily_usage': user_row[5],
+            'dailyUsage': user_row[5],
             'usage_reset_date': user_row[6],
-            'memory_used': user_row[8],
-            'memory_limit': user_row[9],
+            'memoryUsed': user_row[8],
+            'memoryLimit': user_row[9],
             'organization_id': user_row[10]
         }
     except HTTPException:
@@ -567,9 +567,9 @@ def check_usage_limits(user: dict) -> bool:
         execute_sql("UPDATE users SET daily_usage = 0, usage_reset_date = %s WHERE id = %s" if USE_POSTGRES 
                    else "UPDATE users SET daily_usage = 0, usage_reset_date = ? WHERE id = ?", 
                    (today, user['id']))
-        user['daily_usage'] = 0
+        user['dailyUsage'] = 0
     
-    return user['daily_usage'] < daily_limit
+    return user['dailyUsage'] < daily_limit
 
 def increment_usage(user_id: int):
     """Increment user's daily usage count"""
@@ -583,8 +583,8 @@ def calculate_memory_size(content: str) -> int:
 
 def check_memory_limits(user: dict, additional_memory: int = 0) -> bool:
     """Check if user has available memory"""
-    current_memory = user.get('memory_used', 0)
-    memory_limit = user.get('memory_limit', MEMORY_LIMITS.get(user['plan'], 512))
+    current_memory = user.get('memoryUsed', 0)
+    memory_limit = user.get('memoryLimit', MEMORY_LIMITS.get(user['plan'], 512))
     return (current_memory + additional_memory) <= (memory_limit * 1024 * 1024)  # Convert MB to bytes
 
 def update_user_memory_usage(user_id: int, memory_change: int):
@@ -1257,10 +1257,10 @@ async def delete_memory(key_name: str, current_user: dict = Depends(get_current_
 async def get_memory_usage(current_user: dict = Depends(get_current_user)):
     """Get user's memory usage statistics"""
     return {
-        "memory_used": current_user.get('memory_used', 0),
-        "memory_limit": current_user.get('memory_limit', 0),
-        "memory_available": current_user.get('memory_limit', 0) - current_user.get('memory_used', 0),
-        "usage_percentage": (current_user.get('memory_used', 0) / current_user.get('memory_limit', 1)) * 100,
+        "memory_used": current_user.get('memoryUsed', 0),
+        "memory_limit": current_user.get('memoryLimit', 0),
+        "memory_available": current_user.get('memoryLimit', 0) - current_user.get('memoryUsed', 0),
+        "usage_percentage": (current_user.get('memoryUsed', 0) / current_user.get('memoryLimit', 1)) * 100,
         "plan": current_user['plan']
     }
 
