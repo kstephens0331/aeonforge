@@ -81,6 +81,20 @@ function Sidebar({
           <span className="nav-icon">🌟</span>
           Personal
         </button>
+        <button 
+          className={`nav-tab ${activeTab === 'legal' ? 'active' : ''}`}
+          onClick={() => onTabChange('legal')}
+        >
+          <span className="nav-icon">⚖️</span>
+          Legal
+        </button>
+        <button 
+          className={`nav-tab ${activeTab === 'business' ? 'active' : ''}`}
+          onClick={() => onTabChange('business')}
+        >
+          <span className="nav-icon">🏢</span>
+          Business
+        </button>
       </div>
 
       {/* Chat Section - Expanded */}

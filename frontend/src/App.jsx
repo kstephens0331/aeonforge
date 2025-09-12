@@ -4,6 +4,7 @@ import './index.css'
 import './sidebar-enhancements.css'
 import './styles/brand.css'
 import './styles/personal-tools.css'
+import './styles/industry-tools.css'
 
 // Import components
 import Sidebar from './components/Sidebar'
@@ -11,6 +12,8 @@ import ChatInterface from './components/ChatInterface'
 import ProjectsTab from './components/ProjectsTab'
 import MedicalTool from './components/MedicalTool'
 import PersonalTools from './components/PersonalTools'
+import LegalTools from './components/LegalTools'
+import BusinessTools from './components/BusinessTools'
 import LoginScreen from './components/LoginScreen'
 import SubscriptionModal from './components/SubscriptionModal'
 
@@ -258,6 +261,42 @@ function App() {
               user={user}
               authToken={authToken}
             />
+          )}
+          
+          {activeTab === 'legal' && ['standard', 'pro', 'enterprise'].includes(user?.plan) && (
+            <LegalTools 
+              serverInfo={serverInfo}
+              user={user}
+              authToken={authToken}
+            />
+          )}
+          
+          {activeTab === 'legal' && user?.plan === 'free' && (
+            <div className="upgrade-required">
+              <h2>🔒 Premium Feature</h2>
+              <p>Legal document generation requires a Standard, Pro, or Enterprise subscription</p>
+              <button onClick={() => setShowSubscriptionModal(true)}>
+                Upgrade Now
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'business' && ['standard', 'pro', 'enterprise'].includes(user?.plan) && (
+            <BusinessTools 
+              serverInfo={serverInfo}
+              user={user}
+              authToken={authToken}
+            />
+          )}
+          
+          {activeTab === 'business' && user?.plan === 'free' && (
+            <div className="upgrade-required">
+              <h2>🔒 Premium Feature</h2>
+              <p>Business planning tools require a Standard, Pro, or Enterprise subscription</p>
+              <button onClick={() => setShowSubscriptionModal(true)}>
+                Upgrade Now
+              </button>
+            </div>
           )}
         </div>
       </div>

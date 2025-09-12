@@ -1,0 +1,353 @@
+/* Industry Tools Styles */
+.legal-tools, .business-tools {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.legal-header, .business-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.legal-header h1, .business-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.legal-header p, .business-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 20px;
+}
+
+.legal-disclaimer {
+  background: rgba(231, 76, 60, 0.9);
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 5px solid #c0392b;
+  margin-top: 20px;
+  font-size: 0.95rem;
+}
+
+.business-form {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.business-form h3 {
+  margin-bottom: 15px;
+  color: white;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.form-grid input, .form-grid select {
+  padding: 12px 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.form-grid input:focus, .form-grid select:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+.legal-navigation, .business-navigation {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.legal-nav-btn, .business-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.legal-nav-btn:hover, .business-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.legal-nav-btn.active, .business-nav-btn.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.legal-nav-btn .nav-icon, .business-nav-btn .nav-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.legal-nav-btn .nav-title, .business-nav-btn .nav-title {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.legal-content, .business-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 30px;
+  color: #333;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.1);
+}
+
+.legal-category, .business-section {
+  text-align: center;
+}
+
+.legal-category h3, .business-section h3 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+.legal-tools-grid, .business-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+.legal-tool-card, .business-tool-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.legal-tool-card:hover, .business-tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.legal-tool-card h4, .business-tool-card h4 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.legal-tool-card p, .business-tool-card p {
+  color: #6c757d;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.generate-doc-btn, .generate-analysis-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.generate-doc-btn:hover, .generate-analysis-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #21618c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+}
+
+.generate-doc-btn:disabled, .generate-analysis-btn:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Specialized Legal Tools */
+.legal-tools {
+  background: linear-gradient(135deg, #8e44ad 0%, #2c3e50 100%);
+}
+
+.legal-nav-btn.active {
+  background: rgba(142, 68, 173, 0.3);
+  border-color: rgba(142, 68, 173, 0.6);
+}
+
+.generate-doc-btn {
+  background: linear-gradient(135deg, #8e44ad, #7d3c98);
+}
+
+.generate-doc-btn:hover {
+  background: linear-gradient(135deg, #7d3c98, #6c3483);
+  box-shadow: 0 6px 20px rgba(142, 68, 173, 0.3);
+}
+
+/* Specialized Business Tools */
+.business-tools {
+  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+}
+
+.business-nav-btn.active {
+  background: rgba(230, 126, 34, 0.3);
+  border-color: rgba(230, 126, 34, 0.6);
+}
+
+.generate-analysis-btn {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+}
+
+.generate-analysis-btn:hover {
+  background: linear-gradient(135deg, #d35400, #ba4a00);
+  box-shadow: 0 6px 20px rgba(230, 126, 34, 0.3);
+}
+
+/* Tool Categories with Color Coding */
+.legal-category[data-category="contracts"] .legal-tool-card {
+  border-left: 4px solid #3498db;
+}
+
+.legal-category[data-category="business"] .legal-tool-card {
+  border-left: 4px solid #27ae60;
+}
+
+.legal-category[data-category="compliance"] .legal-tool-card {
+  border-left: 4px solid #f39c12;
+}
+
+.legal-category[data-category="litigation"] .legal-tool-card {
+  border-left: 4px solid #e74c3c;
+}
+
+.legal-category[data-category="estate"] .legal-tool-card {
+  border-left: 4px solid #9b59b6;
+}
+
+.legal-category[data-category="intellectual"] .legal-tool-card {
+  border-left: 4px solid #1abc9c;
+}
+
+/* Business Tool Categories */
+.business-section[data-section="planning"] .business-tool-card {
+  border-left: 4px solid #3498db;
+}
+
+.business-section[data-section="funding"] .business-tool-card {
+  border-left: 4px solid #27ae60;
+}
+
+.business-section[data-section="operations"] .business-tool-card {
+  border-left: 4px solid #f39c12;
+}
+
+.business-section[data-section="marketing"] .business-tool-card {
+  border-left: 4px solid #e74c3c;
+}
+
+.business-section[data-section="financial"] .business-tool-card {
+  border-left: 4px solid #9b59b6;
+}
+
+.business-section[data-section="legal"] .business-tool-card {
+  border-left: 4px solid #1abc9c;
+}
+
+/* Status Indicators */
+.tool-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.tool-status.available {
+  background: rgba(39, 174, 96, 0.2);
+  color: #27ae60;
+}
+
+.tool-status.premium {
+  background: rgba(142, 68, 173, 0.2);
+  color: #8e44ad;
+}
+
+.tool-status.coming-soon {
+  background: rgba(241, 196, 15, 0.2);
+  color: #f1c40f;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .legal-tools, .business-tools {
+    padding: 15px;
+  }
+  
+  .legal-header h1, .business-header h1 {
+    font-size: 2rem;
+  }
+  
+  .legal-navigation, .business-navigation {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .legal-tools-grid, .business-tools-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .legal-nav-btn, .business-nav-btn {
+    padding: 12px;
+  }
+  
+  .legal-nav-btn .nav-icon, .business-nav-btn .nav-icon {
+    font-size: 1.5rem;
+  }
+  
+  .legal-nav-btn .nav-title, .business-nav-btn .nav-title {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .legal-navigation, .business-navigation {
+    grid-template-columns: 1fr;
+  }
+  
+  .legal-content, .business-content {
+    padding: 20px;
+  }
+  
+  .legal-tool-card, .business-tool-card {
+    padding: 20px;
+  }
+}
