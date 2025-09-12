@@ -3,7 +3,7 @@ import axios from 'axios'
 import FileUpload from './FileUpload'
 import '../styles/fileupload.css'
 
-function ChatInterface({ currentChat, onUpdateChat, serverInfo }) {
+function ChatInterface({ currentChat, onUpdateChat, serverInfo, user, authToken, onShowSubscription }) {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [pendingApproval, setPendingApproval] = useState(null)
@@ -57,14 +57,15 @@ function ChatInterface({ currentChat, onUpdateChat, serverInfo }) {
     try {
       const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
       
-      // Use the new secure /chat endpoint - no API keys needed on frontend
+      // Use the new secure /chat endpoint with authentication
       const response = await axios.post(`${apiUrl}/chat`, {
         message: inputMessage.trim(),
         conversation_id: currentChat.id || 'main',
         model: serverInfo.default_model || 'gpt-3.5-turbo'
       }, {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         }
       })
 
@@ -146,6 +147,10 @@ function ChatInterface({ currentChat, onUpdateChat, serverInfo }) {
       const response = await axios.post(`${apiUrl}/api/approval`, {
         conversation_id: pendingApproval.conversationId || 'main',
         approved: approved
+      }, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
       })
 
       const approvalMessage = {

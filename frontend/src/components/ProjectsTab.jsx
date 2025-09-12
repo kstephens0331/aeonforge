@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import FileUpload from './FileUpload'
 
-function ProjectsTab({ serverInfo }) {
+function ProjectsTab({ serverInfo, user, authToken }) {
   const [projects, setProjects] = useState([])
   const [selectedProject, setSelectedProject] = useState(null)
   const [showNewProjectForm, setShowNewProjectForm] = useState(false)

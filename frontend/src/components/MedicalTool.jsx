@@ -4,7 +4,7 @@ import FileUpload from './FileUpload'
 import MedicalEducation from './MedicalEducation'
 import '../styles/fileupload.css'
 
-function MedicalTool({ serverInfo }) {
+function MedicalTool({ serverInfo, user, authToken }) {
   const [activeMode, setActiveMode] = useState('research')
   const [query, setQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
