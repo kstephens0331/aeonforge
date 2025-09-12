@@ -16,6 +16,7 @@ import LegalTools from './components/LegalTools'
 import BusinessTools from './components/BusinessTools'
 import RealEstateTools from './components/RealEstateTools'
 import MarketingTools from './components/MarketingTools'
+import TaxTools from './components/TaxTools'
 import LoginScreen from './components/LoginScreen'
 import SubscriptionModal from './components/SubscriptionModal'
 
@@ -331,6 +332,24 @@ function App() {
             <div className="upgrade-required">
               <h2>🔒 Premium Feature</h2>
               <p>Marketing automation tools require a Standard, Pro, or Enterprise subscription</p>
+              <button onClick={() => setShowSubscriptionModal(true)}>
+                Upgrade Now
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'tax' && ['pro', 'enterprise'].includes(user?.plan) && (
+            <TaxTools 
+              serverInfo={serverInfo}
+              user={user}
+              authToken={authToken}
+            />
+          )}
+          
+          {activeTab === 'tax' && ['free', 'standard'].includes(user?.plan) && (
+            <div className="upgrade-required">
+              <h2>🔒 Premium Feature</h2>
+              <p>Professional tax preparation tools require a Pro or Enterprise subscription</p>
               <button onClick={() => setShowSubscriptionModal(true)}>
                 Upgrade Now
               </button>
