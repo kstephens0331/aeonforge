@@ -191,7 +191,8 @@ def get_cors_origins():
     vercel_variants = [
         "https://aeonforge-stephens-projects.vercel.app",
         "https://aeonforge-frontend.vercel.app",
-        "https://aeonforge-ui.vercel.app"
+        "https://aeonforge-ui.vercel.app",
+        "https://aeonforge-bjdcwxwa.vercel.app"  # Hash-based deployment URL
     ]
     
     return base_origins + vercel_variants
