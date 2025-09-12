@@ -117,9 +117,9 @@ def execute_sql(query: str, params=None, fetch_one=False, fetch_all=False):
 def init_db():
     """Initialize comprehensive database with all required tables"""
     try:
-    # SQL schemas for both SQLite and PostgreSQL
-    if USE_POSTGRES:
-        user_table_sql = '''
+        # SQL schemas for both SQLite and PostgreSQL
+        if USE_POSTGRES:
+            user_table_sql = '''
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email VARCHAR(255) UNIQUE NOT NULL,
@@ -137,10 +137,10 @@ def init_db():
         )
         '''
         
-        # PostgreSQL compatible table definitions
-        tables = [
-            user_table_sql,
-            '''CREATE TABLE IF NOT EXISTS organizations (
+            # PostgreSQL compatible table definitions
+            tables = [
+                user_table_sql,
+                '''CREATE TABLE IF NOT EXISTS organizations (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
                 plan VARCHAR(50) DEFAULT 'enterprise',
@@ -216,11 +216,11 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )'''
-        ]
-    else:
-        # SQLite compatible table definitions
-        tables = [
-            '''CREATE TABLE IF NOT EXISTS users (
+            ]
+        else:
+            # SQLite compatible table definitions
+            tables = [
+                '''CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
@@ -311,8 +311,8 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )'''
-        ]
-    
+            ]
+        
         # Execute all table creation statements
         for table_sql in tables:
             execute_sql(table_sql)
