@@ -15,6 +15,7 @@ import PersonalTools from './components/PersonalTools'
 import LegalTools from './components/LegalTools'
 import BusinessTools from './components/BusinessTools'
 import RealEstateTools from './components/RealEstateTools'
+import MarketingTools from './components/MarketingTools'
 import LoginScreen from './components/LoginScreen'
 import SubscriptionModal from './components/SubscriptionModal'
 
@@ -312,6 +313,24 @@ function App() {
             <div className="upgrade-required">
               <h2>🔒 Premium Feature</h2>
               <p>Real estate investment tools require a Standard, Pro, or Enterprise subscription</p>
+              <button onClick={() => setShowSubscriptionModal(true)}>
+                Upgrade Now
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'marketing' && ['standard', 'pro', 'enterprise'].includes(user?.plan) && (
+            <MarketingTools 
+              serverInfo={serverInfo}
+              user={user}
+              authToken={authToken}
+            />
+          )}
+          
+          {activeTab === 'marketing' && user?.plan === 'free' && (
+            <div className="upgrade-required">
+              <h2>🔒 Premium Feature</h2>
+              <p>Marketing automation tools require a Standard, Pro, or Enterprise subscription</p>
               <button onClick={() => setShowSubscriptionModal(true)}>
                 Upgrade Now
               </button>

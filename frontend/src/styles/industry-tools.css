@@ -490,6 +490,194 @@
   border-left: 4px solid #e67e22;
 }
 
+/* Marketing Tools Styles */
+.marketing-tools {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.marketing-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.marketing-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.marketing-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 20px;
+}
+
+.marketing-form {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.marketing-form h3 {
+  margin-bottom: 15px;
+  color: white;
+}
+
+.marketing-navigation {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.marketing-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.marketing-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.marketing-nav-btn.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.marketing-nav-btn .nav-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.marketing-nav-btn .nav-title {
+  font-weight: bold;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.marketing-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 30px;
+  color: #333;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.1);
+}
+
+.marketing-section {
+  text-align: center;
+}
+
+.marketing-section h3 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+.marketing-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+.marketing-tool-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  text-align: left;
+  border-left: 4px solid #e74c3c;
+}
+
+.marketing-tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.marketing-tool-card h4 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.marketing-tool-card p {
+  color: #6c757d;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.generate-content-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.generate-content-btn:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+}
+
+.generate-content-btn:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Marketing Specific Category Styling */
+.marketing-section[data-section="strategy"] .marketing-tool-card {
+  border-left: 4px solid #3498db;
+}
+
+.marketing-section[data-section="content"] .marketing-tool-card {
+  border-left: 4px solid #27ae60;
+}
+
+.marketing-section[data-section="social"] .marketing-tool-card {
+  border-left: 4px solid #9b59b6;
+}
+
+.marketing-section[data-section="advertising"] .marketing-tool-card {
+  border-left: 4px solid #f39c12;
+}
+
+.marketing-section[data-section="analytics"] .marketing-tool-card {
+  border-left: 4px solid #1abc9c;
+}
+
+.marketing-section[data-section="automation"] .marketing-tool-card {
+  border-left: 4px solid #34495e;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .legal-tools, .business-tools {
