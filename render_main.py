@@ -218,9 +218,23 @@ def get_db_connection():
     """Get database connection - PostgreSQL in production, SQLite locally"""
     if USE_POSTGRES:
         try:
-            return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor, sslmode='require')
+            # Try with different SSL modes for better compatibility
+            ssl_modes = ['require', 'prefer', 'allow']
+            for ssl_mode in ssl_modes:
+                try:
+                    return psycopg2.connect(
+                        DATABASE_URL, 
+                        cursor_factory=RealDictCursor, 
+                        sslmode=ssl_mode,
+                        connect_timeout=10,
+                        application_name='aeonforge-production'
+                    )
+                except Exception as ssl_error:
+                    if ssl_mode == ssl_modes[-1]:  # Last attempt
+                        raise ssl_error
+                    continue
         except Exception as e:
-            print(f"PostgreSQL connection failed: {e}")
+            print(f"PostgreSQL connection failed with all SSL modes: {e}")
             print("Falling back to SQLite for development")
             # Fall back to SQLite if PostgreSQL fails
             conn = sqlite3.connect('aeonforge.db')
