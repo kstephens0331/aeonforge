@@ -9,7 +9,7 @@ import httpx
 import jwt
 import bcrypt
 import stripe
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -993,7 +993,7 @@ async def create_conversation(request: ConversationRequest, current_user: dict =
         "conversation_id": conversation_id,
         "title": request.title,
         "model": request.model,
-        "created_at": datetime.now(datetime.timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
 
 @app.get("/conversations")
