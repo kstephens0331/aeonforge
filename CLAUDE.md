@@ -89,3 +89,24 @@ start_frontend.bat
 - Self-healing error recovery
 - Multi-agent collaboration between Project Manager and Senior Developer
 - Never hardcodes any fake or simulated data. Will only use dynamic data to complete the working code. Any dependcies need to be installed and any public or secret keys need to be requested.
+
+# CRITICAL DEPLOYMENT RULE ⚠️
+**MANDATORY: Every time ANY file is updated, changed, created, or modified, it MUST be immediately committed to git and pushed to GitHub/Render. This includes:**
+- Code changes (Python, JavaScript, CSS, etc.)
+- Configuration updates (.env, package.json, etc.)  
+- Database schema changes
+- New features or bug fixes
+- Documentation updates
+
+**NO EXCEPTIONS - Always run:**
+1. `git add [changed files]`
+2. `git commit -m "descriptive message"`  
+3. `git push`
+
+**This ensures the live site is always up-to-date with the latest changes.**
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
