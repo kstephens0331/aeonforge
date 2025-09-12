@@ -3,12 +3,14 @@ import axios from 'axios'
 import './index.css'
 import './sidebar-enhancements.css'
 import './styles/brand.css'
+import './styles/personal-tools.css'
 
 // Import components
 import Sidebar from './components/Sidebar'
 import ChatInterface from './components/ChatInterface'
 import ProjectsTab from './components/ProjectsTab'
 import MedicalTool from './components/MedicalTool'
+import PersonalTools from './components/PersonalTools'
 import LoginScreen from './components/LoginScreen'
 import SubscriptionModal from './components/SubscriptionModal'
 
@@ -248,6 +250,14 @@ function App() {
                 Upgrade Now
               </button>
             </div>
+          )}
+          
+          {activeTab === 'personal' && (
+            <PersonalTools 
+              serverInfo={serverInfo}
+              user={user}
+              authToken={authToken}
+            />
           )}
         </div>
       </div>

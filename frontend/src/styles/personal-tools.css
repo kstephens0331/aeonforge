@@ -1,0 +1,408 @@
+/* Personal Tools Styles */
+.personal-tools {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.personal-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.personal-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.personal-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.personal-navigation {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.nav-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.nav-button.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.nav-icon {
+  font-size: 2rem;
+  margin-right: 15px;
+}
+
+.nav-content {
+  flex: 1;
+}
+
+.nav-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.nav-description {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.personal-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 30px;
+  color: #333;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.1);
+}
+
+.personal-section h3 {
+  font-size: 2rem;
+  margin-bottom: 25px;
+  color: #2c3e50;
+  text-align: center;
+}
+
+/* Budget Management Styles */
+.budget-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.summary-card.income {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.summary-card.expenses {
+  background: linear-gradient(135deg, #FF5722, #E64A19);
+  color: white;
+}
+
+.summary-card.remaining.positive {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: white;
+}
+
+.summary-card.remaining.negative {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+  color: white;
+}
+
+.summary-card h4 {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.summary-card .amount {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.budget-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+}
+
+.budget-category {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.category-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.category-header h4 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.category-header button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.category-header button:hover {
+  background: #0056b3;
+}
+
+.expense-item, .debt-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.debt-item {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.expense-item input, .debt-item input {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.expense-item input:focus, .debt-item input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,123,255,.25);
+}
+
+/* Credit Repair Styles */
+.credit-overview {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.credit-score {
+  display: inline-block;
+  background: linear-gradient(135deg, #6f42c1, #5a32a3);
+  color: white;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(111, 66, 193, 0.3);
+}
+
+.credit-score h4 {
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.credit-score input {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  width: 120px;
+}
+
+.credit-score input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.credit-sections {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+}
+
+.credit-category {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.negative-item {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  margin-bottom: 15px;
+}
+
+.item-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.item-details select, .item-details input {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.generate-letter-btn {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.95rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.generate-letter-btn:hover {
+  background: linear-gradient(135deg, #c82333, #a71e2a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3);
+}
+
+.credit-tips {
+  background: #e8f5e8;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #c3e6c3;
+}
+
+.credit-tips h4 {
+  color: #155724;
+  margin-bottom: 15px;
+}
+
+.credit-tips ul {
+  list-style: none;
+  padding: 0;
+}
+
+.credit-tips li {
+  background: white;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border-left: 4px solid #28a745;
+  font-size: 0.9rem;
+  color: #155724;
+}
+
+/* Coming Soon Styles */
+.coming-soon {
+  text-align: center;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  padding: 40px;
+  border-radius: 16px;
+  border: 2px dashed #adb5bd;
+}
+
+.coming-soon h4 {
+  font-size: 1.5rem;
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+
+.coming-soon ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.coming-soon li {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.coming-soon li:before {
+  content: "🚧 ";
+  margin-right: 5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .personal-tools {
+    padding: 15px;
+  }
+  
+  .personal-header h1 {
+    font-size: 2rem;
+  }
+  
+  .personal-navigation {
+    grid-template-columns: 1fr;
+  }
+  
+  .nav-button {
+    padding: 12px 15px;
+  }
+  
+  .nav-icon {
+    font-size: 1.5rem;
+  }
+  
+  .nav-title {
+    font-size: 1.1rem;
+  }
+  
+  .budget-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .budget-sections {
+    grid-template-columns: 1fr;
+  }
+  
+  .credit-sections {
+    grid-template-columns: 1fr;
+  }
+  
+  .item-details {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .expense-item, .debt-item {
+    grid-template-columns: 1fr;
+  }
+}

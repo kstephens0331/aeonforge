@@ -218,17 +218,12 @@ def get_db_connection():
     """Get database connection - PostgreSQL in production, SQLite locally"""
     if USE_POSTGRES:
         try:
-            # Production PostgreSQL connection for Render
-            return psycopg2.connect(
-                DATABASE_URL, 
-                cursor_factory=RealDictCursor, 
-                sslmode='require',
-                connect_timeout=5
-            )
-        except Exception as e:
-            print(f"PostgreSQL connection failed: {e}")
-            print("Using SQLite for local development")
-            # Fall back to SQLite for local development
+            # Quick PostgreSQL connection for Render
+            return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor, sslmode='require')
+        except:
+            # Quick fallback to SQLite
+            global USE_POSTGRES
+            USE_POSTGRES = False
             conn = sqlite3.connect('aeonforge.db')
             conn.row_factory = sqlite3.Row
             return conn
