@@ -1015,6 +1015,10 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
             "memory_command": memory_config.get("command")
         }
     except Exception as e:
+        print(f"Chat endpoint error: {str(e)}")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Traceback: {traceback.format_exc()}")
+        
         # Graceful fallback with error handling
         fallback_response = f"AI response using {model}: {processed_message}"
         if "gemini" in model.lower() and OPENAI_API_KEY:
