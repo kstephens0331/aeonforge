@@ -21,6 +21,7 @@ import HealthcareTools from './components/HealthcareTools'
 import EducationTools from './components/EducationTools'
 import ConstructionTools from './components/ConstructionTools'
 import RetailTools from './components/RetailTools'
+import AgricultureTools from './components/AgricultureTools'
 import LoginScreen from './components/LoginScreen'
 import SubscriptionModal from './components/SubscriptionModal'
 
@@ -408,6 +409,24 @@ function App() {
             <div className="upgrade-required">
               <h2>🔒 Premium Feature</h2>
               <p>Retail and e-commerce optimization tools require a Standard, Pro, or Enterprise subscription</p>
+              <button onClick={() => setShowSubscriptionModal(true)}>
+                Upgrade Now
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'agriculture' && ['standard', 'pro', 'enterprise'].includes(user?.plan) && (
+            <AgricultureTools 
+              serverInfo={serverInfo}
+              user={user}
+              authToken={authToken}
+            />
+          )}
+          
+          {activeTab === 'agriculture' && user?.plan === 'free' && (
+            <div className="upgrade-required">
+              <h2>🔒 Premium Feature</h2>
+              <p>Agriculture and farming tools require a Standard, Pro, or Enterprise subscription</p>
               <button onClick={() => setShowSubscriptionModal(true)}>
                 Upgrade Now
               </button>
