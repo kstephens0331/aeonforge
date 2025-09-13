@@ -2053,6 +2053,210 @@
   border-left: 4px solid #1abc9c;
 }
 
+/* Entertainment Tools Styles */
+.entertainment-tools {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.entertainment-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.entertainment-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.entertainment-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 20px;
+}
+
+.entertainment-form {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.entertainment-form h3 {
+  margin-bottom: 15px;
+  color: white;
+}
+
+.entertainment-form textarea {
+  padding: 12px 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #2c3e50;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.entertainment-form textarea:focus {
+  border-color: #8e44ad;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.3);
+}
+
+.entertainment-navigation {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.entertainment-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.entertainment-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.entertainment-nav-btn.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.entertainment-nav-btn .nav-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.entertainment-nav-btn .nav-title {
+  font-weight: bold;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.entertainment-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 30px;
+  color: #333;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.1);
+}
+
+.entertainment-section {
+  text-align: center;
+}
+
+.entertainment-section h3 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+.entertainment-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+.entertainment-tool-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  text-align: left;
+  border-left: 4px solid #8e44ad;
+}
+
+.entertainment-tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.entertainment-tool-card h4 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.entertainment-tool-card p {
+  color: #6c757d;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.generate-entertainment-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #8e44ad, #9b59b6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.generate-entertainment-btn:hover {
+  background: linear-gradient(135deg, #7d3c98, #8e44ad);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(142, 68, 173, 0.3);
+}
+
+.generate-entertainment-btn:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Entertainment Specific Category Styling */
+.entertainment-section[data-section="film"] .entertainment-tool-card {
+  border-left: 4px solid #e74c3c;
+}
+
+.entertainment-section[data-section="music"] .entertainment-tool-card {
+  border-left: 4px solid #3498db;
+}
+
+.entertainment-section[data-section="gaming"] .entertainment-tool-card {
+  border-left: 4px solid #27ae60;
+}
+
+.entertainment-section[data-section="streaming"] .entertainment-tool-card {
+  border-left: 4px solid #f39c12;
+}
+
+.entertainment-section[data-section="publishing"] .entertainment-tool-card {
+  border-left: 4px solid #1abc9c;
+}
+
+.entertainment-section[data-section="events"] .entertainment-tool-card {
+  border-left: 4px solid #34495e;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .legal-tools, .business-tools {

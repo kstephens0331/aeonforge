@@ -151,6 +151,13 @@ function Sidebar({
           <span className="nav-icon">🚚</span>
           Transport
         </button>
+        <button 
+          className={`nav-tab ${activeTab === 'entertainment' ? 'active' : ''}`}
+          onClick={() => onTabChange('entertainment')}
+        >
+          <span className="nav-icon">🎬</span>
+          Entertainment
+        </button>
       </div>
 
       {/* Chat Section - Expanded */}
