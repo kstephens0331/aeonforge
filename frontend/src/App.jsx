@@ -17,6 +17,7 @@ import BusinessTools from './components/BusinessTools'
 import RealEstateTools from './components/RealEstateTools'
 import MarketingTools from './components/MarketingTools'
 import TaxTools from './components/TaxTools'
+import HealthcareTools from './components/HealthcareTools'
 import LoginScreen from './components/LoginScreen'
 import SubscriptionModal from './components/SubscriptionModal'
 
@@ -241,7 +242,7 @@ function App() {
           )}
           
           {activeTab === 'medical' && ['pro', 'enterprise'].includes(user?.plan) && (
-            <MedicalTool 
+            <HealthcareTools 
               serverInfo={serverInfo}
               user={user}
               authToken={authToken}
